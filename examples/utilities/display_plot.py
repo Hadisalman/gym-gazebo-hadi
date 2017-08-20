@@ -34,7 +34,8 @@ class LivePlot(object):
         matplotlib.rcParams.update({'font.size': 15})
 
     def plot(self, full=True, dots=False, average=0, interpolated=0):
-        results = gym.monitoring.monitor.load_results(self.outdir)
+        # results = gym.monitoring.monitor.load_results(self.outdir)
+        results = gym.monitoring.load_results(self.outdir)
         data =  results[self.data_key]
         avg_data = []
 

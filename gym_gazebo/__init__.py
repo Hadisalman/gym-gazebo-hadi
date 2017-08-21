@@ -49,3 +49,8 @@ register(
     id='GazeboMazeErleRoverLidar-v0',
     entry_point='gym_gazebo.envs:GazeboMazeErleRoverLidarEnv',
 )
+register(
+    id='GazeboCircuit2SnakeMonsterLidar-v0',
+    entry_point='gym_gazebo.envs:GazeboCircuit2SnakeMonsterLidarEnv',
+    # More arguments here
+)

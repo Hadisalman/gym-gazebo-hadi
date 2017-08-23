@@ -19,7 +19,7 @@
   </node>
 
   <!-- call with walk:=true to start walking controller node with gazebo -->
-  <arg name="walk" default="false" />
+  <arg name="walk" default="true" />
   <group if="$(arg walk)">
     <node name="walking_controller" pkg="snake_monster_control" type="walking_controller.py" />
   </group>

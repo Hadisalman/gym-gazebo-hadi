@@ -75,7 +75,7 @@ def publish_commands( hz, pub, jntcmds):
     # rospy.init_node('walking_controller', anonymous=True)
     rate = rospy.Rate(hz)
     count=0
-    while count<750:
+    while count<500:
         count=count + 1
         jnt_cmd_dict = jntcmds.update(1./hz)
         for jnt in jnt_cmd_dict.keys() :
@@ -122,7 +122,7 @@ class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
 
     def discretize_observation(self,data,new_ranges):
         discretized_ranges = []
-        min_range = 0.3
+        min_range = 0.4
         done = False
         mod = len(data.ranges)/new_ranges
         for i, item in enumerate(data.ranges):

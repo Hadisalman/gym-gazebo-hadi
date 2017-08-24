@@ -59,25 +59,22 @@ class GazeboCircuit2TurtlebotLidarEnv(gazebo_env.GazeboEnv):
 
         if action == 0: #FORWARD
             vel_cmd = Twist()
-            vel_cmd.linear.x = 0.0
+            
+            vel_cmd.linear.x = 0.3
             vel_cmd.angular.z = 0.0
-            # vel_cmd.linear.x = 0.3
-            # vel_cmd.angular.z = 0.0
             self.vel_pub.publish(vel_cmd)
         elif action == 1: #LEFT
             vel_cmd = Twist()
-            vel_cmd.linear.x = 0.00
-            vel_cmd.angular.z = 0.0
-            # vel_cmd.linear.x = 0.05
-            # vel_cmd.angular.z = 0.3
+            
+            vel_cmd.linear.x = 0.05
+            vel_cmd.angular.z = 0.3
            
             self.vel_pub.publish(vel_cmd)
         elif action == 2: #RIGHT
             vel_cmd = Twist()
-            vel_cmd.linear.x = 0.00
-            vel_cmd.angular.z = -0.0
-            # vel_cmd.linear.x = 0.05
-            # vel_cmd.angular.z = -0.3
+           
+            vel_cmd.linear.x = 0.05
+            vel_cmd.angular.z = -0.3
             
             self.vel_pub.publish(vel_cmd)
 

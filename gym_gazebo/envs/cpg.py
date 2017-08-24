@@ -48,7 +48,6 @@ class CPG:
             ds[self.n+i] = self.beta*(self.mu-self.r[i]**2) * s[self.n+i] \
                            + self.omega[i]*s[i] \
                            + np.array(self.k[i]).dot(np.array(s[self.n:]))
-
         return ds
 
     def simulate( self, t ) :

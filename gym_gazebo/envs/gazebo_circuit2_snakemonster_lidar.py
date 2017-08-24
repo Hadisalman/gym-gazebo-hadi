@@ -70,17 +70,16 @@ class JointCmds:
         return self.jnt_cmd_dict
 
 
-def publish_commands( hz, pub):
+def publish_commands( hz, pub, jntcmds):
     
     # rospy.init_node('walking_controller', anonymous=True)
     rate = rospy.Rate(hz)
-    jntcmds = JointCmds()
     count=0
-    while count<500:
+    while count<750:
         count=count + 1
         jnt_cmd_dict = jntcmds.update(1./hz)
         for jnt in jnt_cmd_dict.keys() :
-           pub[jnt].publish( jnt_cmd_dict[jnt] )
+            pub[jnt].publish( jnt_cmd_dict[jnt] )
         rate.sleep()
 
 
@@ -105,7 +104,7 @@ class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
         self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
-
+        self.jntcmds = JointCmds()
         self.action_space = spaces.Discrete(3) #F,L,R
         self.reward_range = (-np.inf, np.inf)
 
@@ -119,11 +118,11 @@ class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
                 leg_str='L' + str(i+1) + '_' + str(j+1)
                 self.pub[leg_str] = rospy.Publisher( ns_str + '/' + leg_str + '_'
                                             + cont_str + '/command',
-                                            Float64, queue_size=10 )
+                                            Float64, queue_size=5 )
 
     def discretize_observation(self,data,new_ranges):
         discretized_ranges = []
-        min_range = 0.35
+        min_range = 0.3
         done = False
         mod = len(data.ranges)/new_ranges
         for i, item in enumerate(data.ranges):
@@ -153,18 +152,18 @@ class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
         if action == 0: #FORWARD
            
             vel_cmd = 3.14/2 
-            publish_commands(100,self.pub)
+            publish_commands(100,self.pub,self.jntcmds)
             # self.vel_pub.publish(vel_cmd)
         elif action == 1: #LEFT
         
             vel_cmd=3.14/2
-            publish_commands(100,self.pub)
+            publish_commands(100,self.pub,self.jntcmds)
             # self.vel_pub.publish(vel_cmd)
 
         elif action == 2: #RIGHT
             vel_cmd = 3.14/2
             # self.vel_pub.publish(vel_cmd)
-            publish_commands(100,self.pub)
+            publish_commands(100,self.pub,self.jntcmds)
         data = None
         while data is None:
             try:

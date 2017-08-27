@@ -15,6 +15,14 @@ class CPG:
         # quadruped walk
         self.k = [[0.,-1.,1.,-1.],[-1.,0.,-1.,1.],
                   [-1.,1.,0.,-1.],[1.,-1.,-1.,0.]]
+
+        # self.k=[[ 0,-1,-1, 1, 1,-1],
+        #         [-1, 0, 1,-1,-1, 1],
+        #         [-1, 1, 0,-1,-1, 1],
+        #         [ 1,-1,-1, 0, 1,-1],
+        #         [ 1,-1,-1, 1, 0,-1],
+        #         [-1, 1, 1,-1,-1, 0]]          
+
         self.omega_sw = 1.                # oscil.'s ang vel in swing
         self.omega_st = 4.*self.omega_sw  # oscil.'s ang vel in stance
         self.alpha = 5.

@@ -12,86 +12,13 @@ from std_msgs.msg import Float64
 from sensor_msgs.msg import LaserScan
 
 from gym.utils import seeding
-from cpg import *
-import numpy as np
-
-class JointCmds:
-    """
-    The class provides a dictionary mapping joints to command values.
-    """
-    def __init__( self ) :
-        
-        self.joints_list = []
-        for i in xrange(6) :
-            for j in xrange(3) :
-                leg_str='L' + str(i+1) + '_' + str(j+1)
-                self.joints_list += [leg_str]
-
-        self.cpg_joints = ['L6_2', 'L1_2', 'L4_2', 'L3_2']
-        self.group_joints = [['L1_1', 'L4_1'], ['L6_1', 'L3_1'],
-                             ['L2_2', 'L5_2'], ['L2_3', 'L5_3']]
-        self.group_joints_flat = [item for sublist in self.group_joints \
-                                  for item in sublist]
-        self.cpg = CPG()
-        self.jnt_cmd_dict = {}
-
-    def update( self, dt ) :
-        s = self.cpg.simulate(dt)
-        x = s[:4]
-        y = s[4:]
-
-        for i, jnt in enumerate(self.cpg_joints) :
-            self.jnt_cmd_dict[jnt] = max(0.5*y[i],0)
-
-        self.jnt_cmd_dict['L1_1'] = 0.2
-        self.jnt_cmd_dict['L6_1'] = -0.2
-        self.jnt_cmd_dict['L4_1'] = -.75
-        self.jnt_cmd_dict['L3_1'] = .75
-
-        self.jnt_cmd_dict['L6_1'] += \
-            .45*(np.cos(np.arctan2(y[0],x[0])+np.pi)+1)
-        self.jnt_cmd_dict['L1_1'] -= \
-            .45*(np.cos(np.arctan2(y[1],x[1])+np.pi)+1)
-        self.jnt_cmd_dict['L4_1'] += \
-            .45*(np.cos(np.arctan2(y[2],x[2])+np.pi)+1)
-        self.jnt_cmd_dict['L3_1'] -= \
-            .45*(np.cos(np.arctan2(y[3],x[3])+np.pi)+1)
-
-        for jnt in self.group_joints[2] :
-            self.jnt_cmd_dict[jnt] = 1.0
-        for jnt in self.group_joints[3] :
-            self.jnt_cmd_dict[jnt] = -1.0
-        
-        for jnt in self.joints_list :
-            if jnt not in self.cpg_joints and \
-               jnt not in self.group_joints_flat :
-                self.jnt_cmd_dict[jnt] = 0.0
-                
-        return self.jnt_cmd_dict
-
-
-def publish_commands( hz, pub, jntcmds):
     
-    # rospy.init_node('walking_controller', anonymous=True)
-    rate = rospy.Rate(hz)
-    count=0
-    while count<500:
-        count=count + 1
-        jnt_cmd_dict = jntcmds.update(1./hz)
-        for jnt in jnt_cmd_dict.keys() :
-            pub[jnt].publish( jnt_cmd_dict[jnt] )
-        rate.sleep()
-
-
-# if __name__ == "__main__":
-#     try:
-#         hz = 100
-#         publish_commands( hz )
-#         # cpg = CPG()
-#         # dt=1./hz
-#         # cpg.plot(10,dt)
-#     except rospy.ROSInterruptException:
-#         pass
+import numpy as np
+from copy import copy
+import time
+import tools
+from Functions.Controller import Controller
+from Functions.CPGgs import CPGgs
 
 
 flag=False
@@ -100,29 +27,26 @@ class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
     def __init__(self):
         # Launch the simulation with the given launchfile name
         gazebo_env.GazeboEnv.__init__(self, "GazeboCircuit2SnakeMonsterLidar_v0.launch")
-        self.vel_pub = rospy.Publisher('/snake_monster/L1_1_eff_pos_controller/commandss', Float64, queue_size=5)
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
         self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
-        self.jntcmds = JointCmds()
         self.action_space = spaces.Discrete(3) #F,L,R
         self.reward_range = (-np.inf, np.inf)
+        # rospy.init_node('walking_controller', anonymous=True)
+        self.pub={}
+        
+        for i in xrange(6) :
+            for j in xrange(3) :
+                self.pub['L' + str(i+1) + '_' + str(j+1)] = rospy.Publisher( '/snake_monster' + '/' + 'L' + str(i+1) + '_' + str(j+1) + '_'
+                                            + 'eff_pos_controller' + '/command',
+                                            Float64, queue_size=10 )
+
 
         self._seed()
 
-        self.pub={}
-        ns_str = '/snake_monster'
-        cont_str = 'eff_pos_controller'
-        for i in xrange(6) :
-            for j in xrange(3) :
-                leg_str='L' + str(i+1) + '_' + str(j+1)
-                self.pub[leg_str] = rospy.Publisher( ns_str + '/' + leg_str + '_'
-                                            + cont_str + '/command',
-                                            Float64, queue_size=5 )
-
     def discretize_observation(self,data,new_ranges):
         discretized_ranges = []
-        min_range = 0.4
+        min_range = 0.5
         done = False
         mod = len(data.ranges)/new_ranges
         for i, item in enumerate(data.ranges):
@@ -143,6 +67,62 @@ class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
 
     def _step(self, action):
 
+        cmd = tools.CommandStruct()
+        T = 600
+        dt = 0.02
+        nIter = round(T/dt)
+        cpg = {
+            'initLength': 250,
+            'w_y': 2.0,
+            'bodyHeight':0.13,
+            'bodyHeightReached':False,
+            'zDist':0,
+            'zHistory':np.ones((1,10)),
+            'zHistoryCnt':0,
+            'direction': np.ones((1,6)),
+            'x':3 * np.array([[.11, -.1, .1, -.01, .12, -.12]]+[[0, 0, 0, 0, 0, 0] for i in range(30000)]),
+            'y':np.zeros((30000+1,6)),
+            'forward': np.ones((1,6)),
+            'backward': -1 * np.ones((1,6)),
+            'leftturn': [1, -1, 1, -1, 1, -1],
+            'rightturn': [-1, 1, -1, 1, -1, 1],
+            'legs': np.zeros((1,18)),
+            'requestedLegPositions': np.zeros((3,6)),
+            'correctedLegPositions': np.zeros((3,6)),
+            'realLegPositions': np.zeros((3,6)),
+            #'smk': smk,
+            'isStance':np.zeros((1,6)),
+            'pose': np.identity(3),
+            'move':True,
+            'groundNorm':np.zeros((1,3)),
+            'groundD': 0,
+            'gravVec':np.zeros((3,1)),
+            'planePoint': [[0], [0], [-1.0]],
+            'theta2':0,
+            'theta3':0,
+            'theta2Trap': 0,
+            'groundTheta':np.zeros((1,30000)),
+            'yOffset':np.zeros((1,6)),
+            'eOffset':np.zeros((1,6)),
+            'theta3Trap': 0,
+            'planeTemp':np.zeros((3,3)),
+            'feetTemp':np.zeros((3,6)),
+            'yReq':0,
+            'o':0,
+            'poseLog':[],
+            'feetLog':[],
+            'planeLog':[]
+            }
+
+        cpg['zHistory'] = cpg['zHistory'] * cpg['bodyHeight']
+        
+        shoulders2 = list(range(2,18,3))
+        elbows = list(range(3,18,3))
+
+        sampleIter = 600
+        cnt = 0
+    
+
         rospy.wait_for_service('/gazebo/unpause_physics')
         try:
             self.unpause()
@@ -150,20 +130,90 @@ class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
             print ("/gazebo/unpause_physics service call failed")
 
         if action == 0: #FORWARD
-           
-            vel_cmd = 3.14/2 
-            publish_commands(100,self.pub,self.jntcmds)
-            # self.vel_pub.publish(vel_cmd)
+
+            
+            while cnt<500:
+                cpg['direction']= cpg['forward']
+                cpg = CPGgs(cpg, cnt, dt)
+                cpg['feetLog'].append(cpg['feetTemp'])
+                cmd.position = cpg['legs']
+                cnt=cnt +1
+                self.pub['L'+'1'+'_'+'1'].publish(cmd.position[0][0])
+                self.pub['L'+'1'+'_'+'2'].publish(cmd.position[0][1])
+                self.pub['L'+'1'+'_'+'3'].publish(cmd.position[0][2])
+                self.pub['L'+'6'+'_'+'1'].publish(cmd.position[0][3])
+                self.pub['L'+'6'+'_'+'2'].publish(cmd.position[0][4])
+                self.pub['L'+'6'+'_'+'3'].publish(cmd.position[0][5])
+                self.pub['L'+'2'+'_'+'1'].publish(cmd.position[0][6])
+                self.pub['L'+'2'+'_'+'2'].publish(cmd.position[0][7])
+                self.pub['L'+'2'+'_'+'3'].publish(cmd.position[0][8])
+                self.pub['L'+'5'+'_'+'1'].publish(cmd.position[0][9])
+                self.pub['L'+'5'+'_'+'2'].publish(cmd.position[0][10])
+                self.pub['L'+'5'+'_'+'3'].publish(cmd.position[0][11])
+                self.pub['L'+'3'+'_'+'1'].publish(cmd.position[0][12])
+                self.pub['L'+'3'+'_'+'2'].publish(cmd.position[0][13])
+                self.pub['L'+'3'+'_'+'3'].publish(cmd.position[0][14])
+                self.pub['L'+'4'+'_'+'1'].publish(cmd.position[0][15])
+                self.pub['L'+'4'+'_'+'2'].publish(cmd.position[0][16])
+                self.pub['L'+'4'+'_'+'3'].publish(cmd.position[0][17])
+
+            
         elif action == 1: #LEFT
+
+            while cnt < 500:
+                cpg['direction']= cpg['leftturn']
+                cpg = CPGgs(cpg, cnt, dt)
+                cpg['feetLog'].append(cpg['feetTemp'])
+                cmd.position = cpg['legs']
+                cnt=cnt +1
+                self.pub['L'+'1'+'_'+'1'].publish(cmd.position[0][0])
+                self.pub['L'+'1'+'_'+'2'].publish(cmd.position[0][1])
+                self.pub['L'+'1'+'_'+'3'].publish(cmd.position[0][2])
+                self.pub['L'+'6'+'_'+'1'].publish(cmd.position[0][3])
+                self.pub['L'+'6'+'_'+'2'].publish(cmd.position[0][4])
+                self.pub['L'+'6'+'_'+'3'].publish(cmd.position[0][5])
+                self.pub['L'+'2'+'_'+'1'].publish(cmd.position[0][6])
+                self.pub['L'+'2'+'_'+'2'].publish(cmd.position[0][7])
+                self.pub['L'+'2'+'_'+'3'].publish(cmd.position[0][8])
+                self.pub['L'+'5'+'_'+'1'].publish(cmd.position[0][9])
+                self.pub['L'+'5'+'_'+'2'].publish(cmd.position[0][10])
+                self.pub['L'+'5'+'_'+'3'].publish(cmd.position[0][11])
+                self.pub['L'+'3'+'_'+'1'].publish(cmd.position[0][12])
+                self.pub['L'+'3'+'_'+'2'].publish(cmd.position[0][13])
+                self.pub['L'+'3'+'_'+'3'].publish(cmd.position[0][14])
+                self.pub['L'+'4'+'_'+'1'].publish(cmd.position[0][15])
+                self.pub['L'+'4'+'_'+'2'].publish(cmd.position[0][16])
+                self.pub['L'+'4'+'_'+'3'].publish(cmd.position[0][17])
         
-            vel_cmd=3.14/2
-            publish_commands(100,self.pub,self.jntcmds)
-            # self.vel_pub.publish(vel_cmd)
+            
+           
 
         elif action == 2: #RIGHT
-            vel_cmd = 3.14/2
-            # self.vel_pub.publish(vel_cmd)
-            publish_commands(100,self.pub,self.jntcmds)
+            while cnt < 500:
+                cpg['direction']= cpg['rightturn']
+                cpg = CPGgs(cpg, cnt, dt)
+                cpg['feetLog'].append(cpg['feetTemp'])
+                cmd.position = cpg['legs']
+                cnt=cnt +1
+                self.pub['L'+'1'+'_'+'1'].publish(cmd.position[0][0])
+                self.pub['L'+'1'+'_'+'2'].publish(cmd.position[0][1])
+                self.pub['L'+'1'+'_'+'3'].publish(cmd.position[0][2])
+                self.pub['L'+'6'+'_'+'1'].publish(cmd.position[0][3])
+                self.pub['L'+'6'+'_'+'2'].publish(cmd.position[0][4])
+                self.pub['L'+'6'+'_'+'3'].publish(cmd.position[0][5])
+                self.pub['L'+'2'+'_'+'1'].publish(cmd.position[0][6])
+                self.pub['L'+'2'+'_'+'2'].publish(cmd.position[0][7])
+                self.pub['L'+'2'+'_'+'3'].publish(cmd.position[0][8])
+                self.pub['L'+'5'+'_'+'1'].publish(cmd.position[0][9])
+                self.pub['L'+'5'+'_'+'2'].publish(cmd.position[0][10])
+                self.pub['L'+'5'+'_'+'3'].publish(cmd.position[0][11])
+                self.pub['L'+'3'+'_'+'1'].publish(cmd.position[0][12])
+                self.pub['L'+'3'+'_'+'2'].publish(cmd.position[0][13])
+                self.pub['L'+'3'+'_'+'3'].publish(cmd.position[0][14])
+                self.pub['L'+'4'+'_'+'1'].publish(cmd.position[0][15])
+                self.pub['L'+'4'+'_'+'2'].publish(cmd.position[0][16])
+                self.pub['L'+'4'+'_'+'3'].publish(cmd.position[0][17])
+
         data = None
         while data is None:
             try:

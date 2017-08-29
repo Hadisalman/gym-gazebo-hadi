@@ -46,7 +46,7 @@ class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
 
     def discretize_observation(self,data,new_ranges):
         discretized_ranges = []
-        min_range = 0.5
+        min_range = 0.4
         done = False
         mod = len(data.ranges)/new_ranges
         for i, item in enumerate(data.ranges):
@@ -132,7 +132,7 @@ class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
         if action == 0: #FORWARD
 
             
-            while cnt<500:
+            while cnt<230:
                 cpg['direction']= cpg['forward']
                 cpg = CPGgs(cpg, cnt, dt)
                 cpg['feetLog'].append(cpg['feetTemp'])
@@ -160,7 +160,7 @@ class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
             
         elif action == 1: #LEFT
 
-            while cnt < 500:
+            while cnt < 230:
                 cpg['direction']= cpg['leftturn']
                 cpg = CPGgs(cpg, cnt, dt)
                 cpg['feetLog'].append(cpg['feetTemp'])
@@ -184,12 +184,39 @@ class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
                 self.pub['L'+'4'+'_'+'1'].publish(cmd.position[0][15])
                 self.pub['L'+'4'+'_'+'2'].publish(cmd.position[0][16])
                 self.pub['L'+'4'+'_'+'3'].publish(cmd.position[0][17])
+            cnt=0    
+            while cnt<130:
+                cpg['direction']= cpg['forward']
+                cpg = CPGgs(cpg, cnt, dt)
+                cpg['feetLog'].append(cpg['feetTemp'])
+                cmd.position = cpg['legs']
+                cnt=cnt +1
+                self.pub['L'+'1'+'_'+'1'].publish(cmd.position[0][0])
+                self.pub['L'+'1'+'_'+'2'].publish(cmd.position[0][1])
+                self.pub['L'+'1'+'_'+'3'].publish(cmd.position[0][2])
+                self.pub['L'+'6'+'_'+'1'].publish(cmd.position[0][3])
+                self.pub['L'+'6'+'_'+'2'].publish(cmd.position[0][4])
+                self.pub['L'+'6'+'_'+'3'].publish(cmd.position[0][5])
+                self.pub['L'+'2'+'_'+'1'].publish(cmd.position[0][6])
+                self.pub['L'+'2'+'_'+'2'].publish(cmd.position[0][7])
+                self.pub['L'+'2'+'_'+'3'].publish(cmd.position[0][8])
+                self.pub['L'+'5'+'_'+'1'].publish(cmd.position[0][9])
+                self.pub['L'+'5'+'_'+'2'].publish(cmd.position[0][10])
+                self.pub['L'+'5'+'_'+'3'].publish(cmd.position[0][11])
+                self.pub['L'+'3'+'_'+'1'].publish(cmd.position[0][12])
+                self.pub['L'+'3'+'_'+'2'].publish(cmd.position[0][13])
+                self.pub['L'+'3'+'_'+'3'].publish(cmd.position[0][14])
+                self.pub['L'+'4'+'_'+'1'].publish(cmd.position[0][15])
+                self.pub['L'+'4'+'_'+'2'].publish(cmd.position[0][16])
+                self.pub['L'+'4'+'_'+'3'].publish(cmd.position[0][17])    
+
+
         
             
            
 
         elif action == 2: #RIGHT
-            while cnt < 500:
+            while cnt < 230:
                 cpg['direction']= cpg['rightturn']
                 cpg = CPGgs(cpg, cnt, dt)
                 cpg['feetLog'].append(cpg['feetTemp'])
@@ -213,6 +240,32 @@ class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
                 self.pub['L'+'4'+'_'+'1'].publish(cmd.position[0][15])
                 self.pub['L'+'4'+'_'+'2'].publish(cmd.position[0][16])
                 self.pub['L'+'4'+'_'+'3'].publish(cmd.position[0][17])
+
+            cnt=0    
+            while cnt<130:
+                cpg['direction']= cpg['forward']
+                cpg = CPGgs(cpg, cnt, dt)
+                cpg['feetLog'].append(cpg['feetTemp'])
+                cmd.position = cpg['legs']
+                cnt=cnt +1
+                self.pub['L'+'1'+'_'+'1'].publish(cmd.position[0][0])
+                self.pub['L'+'1'+'_'+'2'].publish(cmd.position[0][1])
+                self.pub['L'+'1'+'_'+'3'].publish(cmd.position[0][2])
+                self.pub['L'+'6'+'_'+'1'].publish(cmd.position[0][3])
+                self.pub['L'+'6'+'_'+'2'].publish(cmd.position[0][4])
+                self.pub['L'+'6'+'_'+'3'].publish(cmd.position[0][5])
+                self.pub['L'+'2'+'_'+'1'].publish(cmd.position[0][6])
+                self.pub['L'+'2'+'_'+'2'].publish(cmd.position[0][7])
+                self.pub['L'+'2'+'_'+'3'].publish(cmd.position[0][8])
+                self.pub['L'+'5'+'_'+'1'].publish(cmd.position[0][9])
+                self.pub['L'+'5'+'_'+'2'].publish(cmd.position[0][10])
+                self.pub['L'+'5'+'_'+'3'].publish(cmd.position[0][11])
+                self.pub['L'+'3'+'_'+'1'].publish(cmd.position[0][12])
+                self.pub['L'+'3'+'_'+'2'].publish(cmd.position[0][13])
+                self.pub['L'+'3'+'_'+'3'].publish(cmd.position[0][14])
+                self.pub['L'+'4'+'_'+'1'].publish(cmd.position[0][15])
+                self.pub['L'+'4'+'_'+'2'].publish(cmd.position[0][16])
+                self.pub['L'+'4'+'_'+'3'].publish(cmd.position[0][17])    
 
         data = None
         while data is None:

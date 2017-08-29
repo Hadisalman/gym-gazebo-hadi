@@ -14,7 +14,7 @@ import json
 import random
 import numpy as np
 from keras.models import Sequential, load_model
-from keras.initializations import normal
+from keras.initializers import normal
 from keras import optimizers
 from keras.optimizers import RMSprop
 from keras.layers import Convolution2D, Flatten, ZeroPadding2D
@@ -243,6 +243,8 @@ if __name__ == '__main__':
         deepQ = DeepQ(network_outputs, memorySize, discountFactor, learningRate, learnStart)
         deepQ.initNetworks()
         env.monitor.start(outdir, force=True, seed=None)
+        # env = gym.wrappers.Monitor(env, directory=outdir, force=True, write_upon_reset=True)
+
     else:
         #Load weights, monitor info and parameter info.
         with open(params_json) as outfile:
@@ -304,7 +306,7 @@ if __name__ == '__main__':
                 print ("reached the end")
                 done = True
 
-            env.monitor.flush(force=True)
+            # env.monitor.flush(force=True)
             cumulated_reward += reward
 
             if done:

@@ -40,7 +40,7 @@ if __name__ == '__main__':
     epsilon_discount = 0.9986
 
     start_time = time.time()
-    total_episodes = 10000
+    total_episodes = 1000000
     highest_reward = 0
 
     for x in range(total_episodes):

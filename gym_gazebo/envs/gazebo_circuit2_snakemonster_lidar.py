@@ -21,7 +21,6 @@ from Functions.Controller import Controller
 from Functions.CPGgs import CPGgs
 
 
-flag=False
 class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
 
     def __init__(self):

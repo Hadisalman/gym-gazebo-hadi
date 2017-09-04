@@ -242,8 +242,8 @@ if __name__ == '__main__':
 
         deepQ = DeepQ(network_outputs, memorySize, discountFactor, learningRate, learnStart)
         deepQ.initNetworks()
-        env.monitor.start(outdir, force=True, seed=None)
-        # env = gym.wrappers.Monitor(env, directory=outdir, force=True, write_upon_reset=True)
+        # env.monitor.start(outdir, force=True, seed=None)
+        env = gym.wrappers.Monitor(env, directory=outdir, force=True, write_upon_reset=True)
 
     else:
         #Load weights, monitor info and parameter info.
@@ -269,7 +269,7 @@ if __name__ == '__main__':
 
         clear_monitor_files(outdir)
         copy_tree(monitor_path,outdir)
-        env.monitor.start(outdir, resume=True, seed=None)
+        # env.monitor.start(outdir, resume=True, seed=None)
 
     last100Rewards = [0] * 100
     last100RewardsIndex = 0

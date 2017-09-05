@@ -22,6 +22,7 @@ from skimage import transform, color, exposure
 from skimage.transform import rotate
 from skimage.viewer import ImageViewer
 
+
 class GazeboCircuit2cTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
 
     def __init__(self):

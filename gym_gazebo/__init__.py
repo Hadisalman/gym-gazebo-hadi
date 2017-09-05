@@ -59,3 +59,8 @@ register(
     entry_point='gym_gazebo.envs:GazeboSnakeLidarEnv',
     # More arguments here
 )
+register(
+    id='GazeboCircuit2cSnakeMonsterCameraNnEnv-v0',
+    entry_point='gym_gazebo.envs:GazeboCircuit2cSnakeMonsterCameraNnEnv',
+    # More arguments here
+)

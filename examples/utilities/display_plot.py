@@ -9,7 +9,7 @@ import sys
 import argparse
 import numpy as np
 from scipy.interpolate import pchip
-
+from IPython import embed
 class LivePlot(object):
     def __init__(self, outdir, data_key='episode_rewards', line_color='blue'):
         """
@@ -37,6 +37,7 @@ class LivePlot(object):
         # results = gym.monitoring.monitor.load_results(self.outdir)
         results = gym.monitoring.load_results(self.outdir)
         data =  results[self.data_key]
+        # embed()
         avg_data = []
 
         if full:
@@ -55,13 +56,14 @@ class LivePlot(object):
         if interpolated > 0:
             avg_data = []
             avg_data_points = []
-            n = len(data)/interpolated
+            n = int(len(data)/interpolated)
             if n == 0:
                 n = 1
             data_fix = 0
             for i, val in enumerate(data):
                 if i%n==0:
                     if (i+n) <= len(data)+n:
+                        # embed()
                         avg =  sum(data[i:i+n])/n
                         avg_data.append(avg)
                         avg_data_points.append(i)
@@ -80,7 +82,8 @@ class LivePlot(object):
 
         # pause so matplotlib will display
         # may want to figure out matplotlib animation or use a different library in the future
-        plt.pause(0.000001)
+        # plt.pause(0.000001)
+        plt.show()
 
 def expand(lst, n):
     lst = [[i]*n for i in lst]
@@ -88,7 +91,7 @@ def expand(lst, n):
     return lst
 
 def pause():
-    programPause = raw_input("Press the <ENTER> key to finish...")
+    programPause = input("Press the <ENTER> key to finish...")
 
 if __name__ == '__main__':
 
@@ -98,8 +101,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--full", action='store_true', help="print the full data plot with lines")
     parser.add_argument("-d", "--dots", action='store_true', help="print the full data plot with dots")
-    parser.add_argument("-a", "--average", type=int, nargs='?', const=50, metavar="N", help="plot an averaged graph using N as average size delimiter. Default = 50")
-    parser.add_argument("-i", "--interpolated", type=int, nargs='?', const=50, metavar="M", help="plot an interpolated graph using M as interpolation amount. Default = 50")
+    parser.add_argument("-a", "--average",default = 0 ,type=int, nargs='?', const=50, metavar="N", help="plot an averaged graph using N as average size delimiter. Default = 50")
+    parser.add_argument("-i", "--interpolated", default=0,type=int, nargs='?', const=50, metavar="M", help="plot an interpolated graph using M as interpolation amount. Default = 50")
     args = parser.parse_args()
 
     if len(sys.argv)==1:
@@ -108,4 +111,4 @@ if __name__ == '__main__':
     else:
         plotter.plot(full=args.full, dots=args.dots, average=args.average, interpolated=args.interpolated)
 
-    pause()
+    # pause()

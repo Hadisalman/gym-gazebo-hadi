@@ -291,6 +291,11 @@ The following flags are needed in order to execute in GPU mode, using an alias i
 THEANO_FLAGS=mode=FAST_RUN,device=gpu,floatX=float32
 ```
 
+### Snake monster Package
+
+* To be able to run codes for the snake monster, add the `snakeMonsterGazebo` package, which can be found in `https://github.com/Hadisalman/snakeMonsterGazebo`, into the `catkin_ws`.
+* `catkin_make` again!
+
 ---
 
 ## Usage

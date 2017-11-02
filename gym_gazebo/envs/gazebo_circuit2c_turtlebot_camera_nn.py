@@ -162,7 +162,8 @@ class GazeboCircuit2cTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
             else: #L or R no looping
                 reward = 0.5 / float(center_detour+1)
         else:
-            reward = -1
+            # reward = -1
+            reward = -100
 
         #print("detour= "+str(center_detour)+" :: reward= "+str(reward)+" ::action="+str(action))
 

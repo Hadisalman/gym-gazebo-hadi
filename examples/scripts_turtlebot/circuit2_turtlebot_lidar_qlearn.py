@@ -12,7 +12,7 @@ import qlearn
 
 def render():
     render_skip = 0 #Skip first X episodes.
-    render_interval = 50 #Show render Every Y episodes.
+    render_interval = 10 #Show render Every Y episodes.
     render_episodes = 10 #Show Z episodes every rendering.
 
     if (x%render_interval == 0) and (x != 0) and (x > render_skip):
@@ -53,7 +53,7 @@ if __name__ == '__main__':
         if qlearn.epsilon > 0.05:
             qlearn.epsilon *= epsilon_discount
 
-        #render() #defined above, not env.render()
+        render() #defined above, not env.render()
 
         state = ''.join(map(str, observation))
 

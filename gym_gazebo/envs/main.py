@@ -229,7 +229,7 @@ for t in range(30000):
     '''
     #cpg['requestedLegPositions']= smk.getLegPositions(cpg['legs'])
     
-    cpg['direction']= cpg['rightturn']
+    cpg['direction']= cpg['forward']
 
     cpg = CPGgs(cpg, t, dt)
 

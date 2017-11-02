@@ -84,7 +84,7 @@ class DeepQ:
         i = 0
         for layer in self.model.layers:
             weights = layer.get_weights()
-            print "layer ",i,": ",weights
+            print("layer ",i,": ",weights)
             i += 1
 
     def backupNetwork(self, model, backup):
@@ -329,7 +329,7 @@ if __name__ == '__main__':
                     if (epoch)%100==0: 
                         #save model weights and monitoring data every 100 epochs. 
                         deepQ.saveModel('/tmp/turtle_c2c_dqn_ep'+str(epoch)+'.h5')
-                        env.monitor.flush()
+                        # env.monitor.flush()
                         copy_tree(outdir,'/tmp/turtle_c2c_dqn_ep'+str(epoch))
                         #save simulation parameters.
                         parameter_keys = ['explorationRate','minibatch_size','learnStart','learningRate','discountFactor','memorySize','network_outputs','current_epoch','stepCounter','EXPLORE','INITIAL_EPSILON','FINAL_EPSILON','loadsim_seconds']

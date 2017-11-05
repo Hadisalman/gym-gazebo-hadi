@@ -16,7 +16,9 @@ if __name__ == '__main__':
     env = gym.make('GazeboCircuit2TurtlebotLidar-v0')
 
     outdir = '/tmp/gazebo_gym_experiments'
-    env.monitor.start(outdir, force=True, seed=None)
+    # env.monitor.start(outdir, force=True, seed=None)
+    env = gym.wrappers.Monitor(env, directory=outdir, force=True, write_upon_reset=True)
+
     #plotter = LivePlot(outdir)
 
     last_time_steps = numpy.ndarray(0)
@@ -64,7 +66,7 @@ if __name__ == '__main__':
             #sarsa.learn(state, action, reward, nextState)
             sarsa.learn(state, action, reward, nextState, nextAction)
 
-            env.monitor.flush(force=True)
+            # env.monitor.flush(force=True)
 
             if not(done):
                 state = nextState

@@ -1,5 +1,5 @@
 <launch>
-  <arg name="gui" default="false" />	
+  <arg name="gui" default="false" />
   <!-- Load gazebo snake monster simulation by calling launch file and use the joint state publisher below instead of the one in this launch file -->
   <include file="$(find snake_monster)/launch/Gazebosnakemonster.launch">
     <arg name="run_state_publisher" value="false" />

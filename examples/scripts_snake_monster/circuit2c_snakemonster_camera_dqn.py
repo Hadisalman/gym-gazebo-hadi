@@ -335,7 +335,7 @@ if __name__ == '__main__':
                         parameter_keys = ['explorationRate','minibatch_size','learnStart','learningRate','discountFactor','memorySize','network_outputs','current_epoch','stepCounter','EXPLORE','INITIAL_EPSILON','FINAL_EPSILON','loadsim_seconds']
                         parameter_values = [explorationRate, minibatch_size, learnStart, learningRate, discountFactor, memorySize, network_outputs, epoch, stepCounter, EXPLORE, INITIAL_EPSILON, FINAL_EPSILON,s]
                         parameter_dictionary = dict(zip(parameter_keys, parameter_values))
-                        with open('/tmp/turtle_c2c_dqn_ep'+str(epoch)+'.json', 'w') as outfile:
+                        with open('/tmp/snakemonster_c2c_dqn_ep'+str(epoch)+'.json', 'w') as outfile:
                             json.dump(parameter_dictionary, outfile)
                 break
 

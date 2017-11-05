@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+
+from gym import wrappers
 import gym
 import gym_gazebo
 import time
@@ -108,7 +110,7 @@ if __name__ == '__main__':
     env = gym.make('GazeboMazeTurtlebotLidar-v0')
 
     outdir = '/tmp/gazebo_gym_experiments'
-    env.monitor.start(outdir, force=True, seed=None)
+    env.monitor(outdir, force=True, seed=None)
     #plotter = LivePlot(outdir)
 
     last_time_steps = numpy.ndarray(0)

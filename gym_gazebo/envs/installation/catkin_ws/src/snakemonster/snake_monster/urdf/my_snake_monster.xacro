@@ -181,39 +181,7 @@
     <child link="${L4_1}__INPUT_INTERFACE"/>
     <origin xyz="${-width/2} -${leg_y_offset} ${height/2}" rpy="-${PI/2} 0 ${PI/2}"/>
   </joint>
-  
-    <xacro:property name="camera_link" value="0.05" /> <!-- Size of square 'camera' box -->
-    <joint name="camera_joint" type="fixed">
-    <axis xyz="0 1 0" />
-    <origin xyz="0 0.125 0.052" rpy="0 0 1.57"/>
-    <parent link="base"/>
-    <child link="camera_link"/>
-  </joint>
-
-  <!-- Camera -->
-  <link name="camera_link">
-    <collision>
-      <origin xyz="0 0 0.052" rpy="0 0 1.57"/>
-      <geometry>
-    <box size="${camera_link} ${camera_link} ${camera_link}"/>
-      </geometry>
-    </collision>
-
-    <visual>
-      <origin xyz="-0.02 -0.02 0.024" rpy="0 0 0"/>
-      <geometry>
-    <mesh filename="package://snake_monster/meshes/gopro.dae"/>
-      </geometry>
-      <material name="red"/>
-    </visual>
-
-    <inertial>
-      <mass value="1e-5" />
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
-    </inertial>
-  </link>
-  
+ 
  <xacro:include filename="$(find kobuki_description)/urdf/sensors/lidar_sensor.urdf.xacro" />
  <xacro:lidar_sensor
     name="sonar2"
@@ -232,7 +200,42 @@
 
   <!-- Import all Gazebo-customization elements -->
   <xacro:include filename="./my_snake_monster.gazebo" />
-  
+
+<xacro:property name="camera_link" value="0.05"/><!-- Size of square 'camera' box --><joint name="camera_joint" type="fixed"><axis xyz="0 1 0"/><origin xyz="0 0.125 0.052" rpy="0 0 1.57"/><parent link="base"/><child link="camera_link"/></joint><!-- Camera --><link name="camera_link"><collision><origin xyz="0 0 0.052" rpy="0 0 1.57"/><geometry><box size="${camera_link} ${camera_link} ${camera_link}"/></geometry></collision><visual><origin xyz="-0.02 -0.02 0.024" rpy="0 0 0"/><geometry><mesh filename="package://snake_monster/meshes/gopro.dae"/></geometry><material name="red"/></visual><inertial><mass value="1e-5"/><origin xyz="0 0 0" rpy="0 0 0"/><inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6"/></inertial></link>
+
+
+ 
+   <xacro:property name="imu_link" value="0.05" /> <!-- Size of square 'camera' box -->
+    <joint name="imu_joint" type="fixed">
+    <axis xyz="0 1 0" />
+    <origin xyz="0 0.125 0.052" rpy="0 0 1.57"/>
+    <parent link="base"/>
+    <child link="imu_link"/>
+  </joint>
+  <!-- IMU -->
+  <link name="imu_link">
+    <collision>
+      <origin xyz="0 0 0.052" rpy="0 0 1.57"/>
+      <geometry>
+    <box size="0.1 0.1 0.1"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="-0.02 -0.02 0.024" rpy="0 0 0"/>
+      <geometry>
+    <box size ="0.1 0.1 0.1"/>
+      </geometry>
+      <material name="red"/>
+    </visual>
+
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
 
   <!-- legs -->
   <xacro:leg leg="leg1" mod1="${L1_1}" mod2="${L1_2}" mod3="${L1_3}"/>

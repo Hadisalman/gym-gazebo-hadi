@@ -80,6 +80,22 @@
     </gazebo>
   </xacro:macro>
 
+
+<!-- imu sensor plugin -->
+ <gazebo> 
+   <plugin name="ros_imu_sensor" filename="libgazebo_ros_imu.so"> 
+ 	<robotNamespace>/snake_monster</robotNamespace> 
+ 	<updateRate>200.0</updateRate> 
+ 	<gaussianNoise>0.005</gaussianNoise> 
+ 	<topicName>sensors/imu</topicName> 
+ 	<serviceName>sensors/imu</serviceName> 
+ 	<bodyName>imu_link</bodyName> 
+ 	<xyzOffset>0 0 0</xyzOffset> 
+ 	<rpyOffset>0 0 0</rpyOffset> 
+   </plugin> 
+ </gazebo> 
+
+
   <xacro:macro name="modSensors" params="mod">
     <gazebo reference="${mod}">
       <!-- required for joint torque feedback -->
@@ -97,80 +113,25 @@
       </plugin>
     </gazebo>
     
-     <gazebo reference="camera_link">
-    <sensor type="camera" name="camera1">
-      <update_rate>30.0</update_rate>
-      <camera name="head">
-        <horizontal_fov>1.3962634</horizontal_fov>
-        <image>
-          <width>800</width>
-          <height>800</height>
-          <format>R8G8B8</format>
-        </image>
-        <clip>
-          <near>0.02</near>
-          <far>300</far>
-        </clip>
-        <noise>
-          <type>gaussian</type>
-          <!-- Noise is sampled independently per pixel on each frame.
-               That pixel's noise value is added to each of its color
-               channels, which at that point lie in the range [0,1]. -->
-          <mean>0.0</mean>
-          <stddev>0.007</stddev>
-        </noise>
-      </camera>
-      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
-        <alwaysOn>true</alwaysOn>
-        <updateRate>0.0</updateRate>
-        <cameraName>sensors/cam</cameraName>
-        <imageTopicName>im_raw</imageTopicName>
-        <cameraInfoTopicName>cam_info</cameraInfoTopicName>
-        <frameName>camera_link</frameName>
-        <hackBaseline>0.07</hackBaseline>
-        <distortionK1>0.0</distortionK1>
-        <distortionK2>0.0</distortionK2>
-        <distortionK3>0.0</distortionK3>
-        <distortionT1>0.0</distortionT1>
-        <distortionT2>0.0</distortionT2>
-      </plugin>
-    </sensor>
-  </gazebo>
-
     <!-- Gazebo 5 contact sensor element isn't working -->
-    <!-- <gazebo reference="foot__leg1__INPUT_INTERFACE"> -->
-    <!--   <sensor name="leg1_contact_sensor" type="contact"> -->
-    <!-- 	<always_on>true</always_on> -->
-    <!-- 	<update_rate>50</update_rate> -->
-    <!-- 	<contact> -->
-    <!-- 	  <collision>leg1_foot_collision</collision> -->
-    <!-- 	</contact> -->
-    <!-- 	<plugin name="leg1_ros_bumper_contacts" filename="libgazebo_ros_bumper.so"> -->
-    <!-- 	  <robotNamespace>/snake_monster</robotNamespace> -->
-    <!-- 	  <bumperTopicName>sensors/leg1_bumper</bumperTopicName> -->
-    <!-- 	  <frameName>world</frameName> -->
-    <!-- 	</plugin> -->
-    <!--   </sensor> -->
-    <!-- </gazebo> -->
+     <gazebo reference="foot__leg1__INPUT_INTERFACE"> 
+       <sensor name="leg1_contact_sensor" type="contact"> 
+     	<always_on>true</always_on> 
+     	<update_rate>50</update_rate> 
+     	<contact> 
+     	  <collision>leg1_foot_collision</collision> 
+     	</contact> 
+     	<plugin name="leg1_ros_bumper_contacts" filename="libgazebo_ros_bumper.so"> 
+     	  <robotNamespace>/snake_monster</robotNamespace> 
+     	  <bumperTopicName>sensors/leg1_bumper</bumperTopicName> 
+     	  <frameName>world</frameName> 
+     	</plugin> 
+       </sensor> 
+     </gazebo> 
 
     <!-- Lidar sensor -->
 
-    <!-- imu sensor plugin -->
-     <gazebo>
-       <plugin name="imu_sensor" filename="libgazebo_ros_imu.so">
-        <robotNamespace>/snake_monster</robotNamespace>
-        <updateRate>200.0</updateRate>
-        <gaussianNoise>0.005</gaussianNoise>
-        <topicName>sensors/imu</topicName>
-        <serviceName>sensors/imu</serviceName>
-        <bodyName>base</bodyName>
-        <xyzOffset>0 0 0</xyzOffset> -
-        <rpyOffset>0 0 0</rpyOffset>
-       </plugin>
-     </gazebo>
   </xacro:macro>
-
-
 
 
   <xacro:include filename="$(find kobuki_description)/urdf/sensors/lidar_sensor.urdf.xacro" />

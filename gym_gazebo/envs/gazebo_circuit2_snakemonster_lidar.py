@@ -31,6 +31,11 @@ class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
         self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
         self.action_space = spaces.Discrete(3) #F,L,R
         self.reward_range = (-np.inf, np.inf)
+	#self.action_space = spaces.Box(low=-self.max_torque, high=self.max_torque, shape=(1,))
+        #self.observation_space = spaces.Box(low=-high, high=high)
+
+
+
         # rospy.init_node('walking_controller', anonymous=True)
         self.pub={}
         

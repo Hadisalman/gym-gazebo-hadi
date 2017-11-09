@@ -1,4 +1,9 @@
 <launch>
+  
+  <node pkg="tf" type="static_transform_publisher" name="map_to_odom" args="0 0 0 0 0 0 map odom 100"/>
+
+  <node pkg="tf" type="static_transform_publisher" name="world_to_map" args="0 0 0 0 0 0 base_link base 100"/>
+
   <arg name="gui" default="false" />
   <!-- Load gazebo snake monster simulation by calling launch file and use the joint state publisher below instead of the one in this launch file -->
   <include file="$(find snake_monster)/launch/Gazebosnakemonster.launch">

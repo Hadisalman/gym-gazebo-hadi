@@ -26,7 +26,17 @@ from keras.regularizers import l2
 from keras.optimizers import SGD , Adam
 from keras import backend
 import memory
+import keras.backend as K
+import tensorflow as tf
 
+# os.environ["CUDA_VISIBLE_DEVICES"]="0"
+config = tf.ConfigProto()
+config.log_device_placement=False
+config.gpu_options.allow_growth=True
+config.gpu_options.per_process_gpu_memory_fraction = 1
+config.allow_soft_placement = True
+sess = tf.Session(config=config)
+K.set_session(sess)
 
 class DeepQ:
     """
@@ -60,23 +70,24 @@ class DeepQ:
 
     def createModel(self):
         # Network structure must be directly changed here.
-        model = Sequential()
-        print(img_rows)
-        # backend.set_image_dim_ordering('tf')
-        model.add(Convolution2D(16, 3, 3, subsample=(2,2),dim_ordering="th" ,input_shape=(img_channels,img_rows,img_cols))) #  img_channels
-        model.add(Activation('relu'))
-        model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(16, 3, 3, subsample=(2,2)))
-        model.add(Activation('relu'))
-        model.add(MaxPooling2D(pool_size=(2, 2) ,strides=(2,2)))# ,dim_ordering="th"
-        model.add(Flatten())
-        model.add(Dense(256))
-        model.add(Activation('relu'))
-        model.add(Dense(network_outputs))
-        #adam = Adam(lr=self.learningRate)
-        #model.compile(loss='mse',optimizer=adam)
-        model.compile(RMSprop(lr=self.learningRate), 'MSE')
-        model.summary()
+        with tf.device('/gpu:0'):
+            model = Sequential()
+            # print(img_rows)
+            # backend.set_image_dim_ordering('tf')
+            model.add(Convolution2D(16, 3, 3, subsample=(2,2),dim_ordering="th" ,input_shape=(img_channels,img_rows,img_cols))) #  img_channels
+            model.add(Activation('relu'))
+            model.add(ZeroPadding2D((1, 1)))
+            model.add(Convolution2D(16, 3, 3, subsample=(2,2)))
+            model.add(Activation('relu'))
+            model.add(MaxPooling2D(pool_size=(2, 2) ,strides=(2,2)))# ,dim_ordering="th"
+            model.add(Flatten())
+            model.add(Dense(256))
+            model.add(Activation('relu'))
+            model.add(Dense(network_outputs))
+            #adam = Adam(lr=self.learningRate)
+            #model.compile(loss='mse',optimizer=adam)
+            model.compile(RMSprop(lr=self.learningRate), 'MSE')
+            model.summary()
 
         return model
 
@@ -195,7 +206,7 @@ class DeepQ:
                 if isFinal:
                     X_batch = np.append(X_batch, newState.copy(), axis=0)
                     Y_batch = np.append(Y_batch, np.array([[reward]*self.output_size]), axis=0)
-            self.model.fit(X_batch, Y_batch, validation_split=0.2, batch_size = len(miniBatch), nb_epoch=1, verbose = 0)
+            self.model.fit(X_batch, Y_batch, validation_split=0.2, batch_size = len(miniBatch), nb_epoch=1, verbose = 1)
 
     def saveModel(self, path):
         self.model.save(path)
@@ -217,7 +228,7 @@ if __name__ == '__main__':
 
     #REMEMBER!: turtlebot_cnn_setup.bash must be executed.
     env = gym.make('GazeboCircuit2cTurtlebotCameraNnEnv-v0')
-    outdir = '/tmp/gazebo_gym_experiments/'
+    outdir = 'gazebo_gym_experiments/'
 
     continue_execution = False
     #fill this if continue_execution=True
@@ -328,14 +339,14 @@ if __name__ == '__main__':
                     #SAVE SIMULATION DATA
                     if (epoch)%100==0: 
                         #save model weights and monitoring data every 100 epochs. 
-                        deepQ.saveModel('/tmp/turtle_c2c_dqn_ep'+str(epoch)+'.h5')
+                        deepQ.saveModel(outdir+'turtle_c2c_dqn_ep'+str(epoch)+'.h5')
                         # env.monitor.flush()
-                        copy_tree(outdir,'/tmp/turtle_c2c_dqn_ep'+str(epoch))
+                        copy_tree(outdir,'turtle_c2c_dqn_ep'+str(epoch))
                         #save simulation parameters.
                         parameter_keys = ['explorationRate','minibatch_size','learnStart','learningRate','discountFactor','memorySize','network_outputs','current_epoch','stepCounter','EXPLORE','INITIAL_EPSILON','FINAL_EPSILON','loadsim_seconds']
                         parameter_values = [explorationRate, minibatch_size, learnStart, learningRate, discountFactor, memorySize, network_outputs, epoch, stepCounter, EXPLORE, INITIAL_EPSILON, FINAL_EPSILON,s]
                         parameter_dictionary = dict(zip(parameter_keys, parameter_values))
-                        with open('/tmp/turtle_c2c_dqn_ep'+str(epoch)+'.json', 'w') as outfile:
+                        with open(outdir+'turtle_c2c_dqn_ep'+str(epoch)+'.json', 'w') as outfile:
                             json.dump(parameter_dictionary, outfile)
                 break
 

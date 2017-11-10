@@ -32,5 +32,9 @@
   <!--<node name="rviz" pkg="rviz" type="rviz" args="-d $(find snake_monster)/urdf.rviz" />-->	
   
   <!-- <node name="control_messager" pkg="snake_monster_control" type="control_messager" /> -->
+
+  <node name="tf_bot_body" pkg="snake_monster_control" type="tf_broad.py" />
+  <node name="state_integrator" pkg="snake_monster_control" type="state_integrator.py" />
+
 	  
 </launch>

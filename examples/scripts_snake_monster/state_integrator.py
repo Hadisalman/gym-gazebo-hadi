@@ -3,6 +3,7 @@ import rospy
 from sensor_msgs.msg import Imu
 from geometry_msgs.msg import WrenchStamped
 from control_msgs.msg import JointControllerState
+from geometry_msgs.msg import PoseStamped
 import tf2_ros
 import tf2_geometry_msgs
 import tf
@@ -11,23 +12,20 @@ import numpy as np
 no_of_joints = 18
 no_of_torque_directions = 6
 no_legs = 6
-
+leg_contact_threshold = 0.027
 
 class robot_state:
 	#The following are the states that we check for a particular time!
-	
         imu_state = [];
 	joint_torque = np.zeros(no_of_joints*no_of_torque_directions)
 	joint_positions = np.zeros(no_of_joints)
 	joint_velocities = np.zeros(no_of_joints)
-	robot_state = np.asarray([0, 0, 0, 0, 0, 0, 1]) #3 Trans vector and 4 quat variables!
-	collision
+	robot_pose = np.asarray([0, 0, 0, 0, 0, 0, 1]) #3 Trans vector and 4 quat variables!
         end_effector_z = np.zeros(no_legs) 
-	
+        	
 	#Call back definition for the IMU on the robot 
 	def imu_callback(self, imu_data):
     	    self.imu_state = np.asarray([imu_data.orientation.x, imu_data.orientation.y, imu_data.orientation.z, imu_data.orientation.w, imu_data.angular_velocity.x, imu_data.angular_velocity.y, imu_data.angular_velocity.z, imu_data.angular_velocity.y, imu_data.linear_acceleration.x, imu_data.linear_acceleration.y, imu_data.linear_acceleration.z]) 
-
 
 	#Joint states callback functions	
 	def joint_state_callback(self, state_data, joint_number):
@@ -103,10 +101,64 @@ def listener(current_robot_state):
     while not rospy.is_shutdown():
         try:
 
-		(trans,rot)  = listener.lookupTransform('elbow__leg6__AFTER_CORNER_BODY', 'foot__leg4__INPUT_INTERFACE', rospy.Time(0))
+		(trans,rot)  = listener.lookupTransform('map', 'foot__leg6__INPUT_INTERFACE', rospy.Time(0))
+		current_robot_state.end_effector_z[5] = (trans[2] <  leg_contact_threshold)*1
+		''' pose = 	PoseStamped()
+		print "jhol"
+		pose.pose.position.x = trans[0]			
+		pose.pose.position.y = trans[1]			
+		pose.pose.position.z = trans[2]			
+		pose.pose.orientation.x = rot[0]			
+		pose.pose.orientation.y = rot[1]			
+		pose.pose.orientation.z = rot[2]			
+		pose.pose.orientation.w = rot[3]			
+		pose.header.frame_id = 'elbow__leg6__AFTER_CORNER_BODY'
+		end_ans = listener.transformPose('/map',pose)	
+		print end_ans '''
 	except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-        	continue
+        	pass
+	 
+        try:
 
+		#(trans,rot)  = listener.lookupTransform('elbow__leg5__AFTER_CORNER_BODY', 'foot__leg5__INPUT_INTERFACE', rospy.Time(0))
+		(trans,rot)  = listener.lookupTransform('map', 'foot__leg5__INPUT_INTERFACE', rospy.Time(0))
+		current_robot_state.end_effector_z[4] = (trans[2] <  leg_contact_threshold)*1
+		#print trans
+	except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+        	pass
+	
+        try:
+		(trans,rot)  = listener.lookupTransform('map', 'foot__leg4__INPUT_INTERFACE', rospy.Time(0))
+		current_robot_state.end_effector_z[3] = (trans[2] <  leg_contact_threshold)*1
+	except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+        	pass
+
+        try:
+		(trans,rot)  = listener.lookupTransform('map', 'foot__leg3__INPUT_INTERFACE', rospy.Time(0))
+		current_robot_state.end_effector_z[2] = (trans[2] <  leg_contact_threshold)*1
+	except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+        	pass
+
+        try:
+		(trans,rot)  = listener.lookupTransform('map', 'foot__leg2__INPUT_INTERFACE', rospy.Time(0))
+		current_robot_state.end_effector_z[1] = (trans[2] <  leg_contact_threshold)*1
+	except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+        	pass
+
+        try:
+		(trans,rot)  = listener.lookupTransform('map', 'foot__leg1__INPUT_INTERFACE', rospy.Time(0))
+		current_robot_state.end_effector_z[0] = (trans[2] <  leg_contact_threshold)*1
+	except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+        	pass
+
+
+	try:
+		(trans,rot)  = listener.lookupTransform('base', 'map', rospy.Time(0))
+		current_robot_state.robot_pose = np.asarray([rot, trans])
+	except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+        	pass
+	
+	print current_robot_state.end_effector_z
         rate.sleep()
     
     rospy.spin()

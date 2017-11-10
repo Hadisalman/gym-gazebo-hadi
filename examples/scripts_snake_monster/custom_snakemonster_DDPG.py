@@ -56,8 +56,9 @@ if __name__ == '__main__':
         #render() #defined above, not env.render()
 
         state = ''.join(map(str, observation))
-
+	print "Before episode starts"
         for i in range(1500):
+	    print "Actions taken loop"
 
             # Pick an action based on the current state
             action = qlearn.chooseAction(state)

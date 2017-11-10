@@ -316,10 +316,15 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 
         data = None
         current_data = robot_state()
+    	listener = tf.TransformListener()
+    	rate = rospy.Rate(100.0)
         while data is None:
+
+	    print "Here!!"
             #Lidar data. We need to remove this or spoof this!
             try:
                 data = rospy.wait_for_message('/scan', LaserScan, timeout=5)
+	    	print "Here!!"
             
             except:
                 pass
@@ -329,6 +334,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
             try:
                 imu_data = rospy.wait_for_message("/snake_monster/sensors/imu", Imu,5  )
                 current_data.imu(imu_data) 
+	    	print "Here!!"
             except:
                 pass
             
@@ -338,6 +344,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
                 try:
                     torque_data = rospy.wait_for_message("/snake_monster/sensors/SA00" + str(torque_ids[i]) +  "__MoJo/torque", WrenchStamped , 5)
                     current_data.torque_joint(torque_data, i+1) 
+	    	    print "Here!!"
                 except:
                     pass
 
@@ -347,6 +354,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
                     try:
                         joint_data = rospy.wait_for_message("/snake_monster/L" + str(limb) + "_" + str(joint_no) + "_eff_pos_controller/state", JointControllerState, 5)
                         current_data.joint_state(joint_data, limb*joint_no + 1)
+	    		print "Here!!"
                     except:
                         pass
             #State of each foot!    
@@ -355,6 +363,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
                 try:
                     (trans,rot)  = listener.lookupTransform('map', 'foot__leg' + str(limb) + '__INPUT_INTERFACE', rospy.Time(0))
                     current_data.end_effector_z[limb] = (trans[2] <  leg_contact_threshold)*1
+	    	    print "Here____!!"
                 except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                     pass
     
@@ -362,6 +371,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
             try:
                 (trans,rot)  = listener.lookupTransform('base', 'map', rospy.Time(0))
                 current_data.robot_pose = np.asarray([rot, trans])
+	    	print "Here!!"
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 pass
     

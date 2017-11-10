@@ -43,6 +43,7 @@ class robot_state:
     joint_velocities = np.zeros(no_of_joints)
     robot_pose = np.asarray([0, 0, 0, 0, 0, 0, 1]) #3 Trans vector and 4 quat variables!
     end_effector_z = np.zeros(no_legs) 
+    end_effector_angles = np.zeros(no_legs*3) 
             
     #Call back definition for the IMU on the robot 
     def imu(self, imu_data):
@@ -320,60 +321,87 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
     	rate = rospy.Rate(100.0)
         while data is None:
 
-	    print "Here!!"
+	    
             #Lidar data. We need to remove this or spoof this!
             try:
                 data = rospy.wait_for_message('/scan', LaserScan, timeout=5)
-	    	print "Here!!"
             
             except:
                 pass
             
 
             #Imu data!
-            try:
-                imu_data = rospy.wait_for_message("/snake_monster/sensors/imu", Imu,5  )
-                current_data.imu(imu_data) 
-	    	print "Here!!"
-            except:
-                pass
+            flag = False
+            while flag == False:
+
+                try:
+                    print "settingFAlse"
+
+                    imu_data = rospy.wait_for_message("/snake_monster/sensors/imu", Imu, 0.1)
+                    current_data.imu(imu_data) 
+                    flag = True
+                    print "setting true"
+
+                except:
+                    pass
             
             
-            torque_ids = [1, 2, 3, 5, 13, 14, 22, 23, 30, 31, 36, 37, 38, 43, 46, 48, 49, 50]       
+            torque_ids = ['01', '02', '03', '05', '13', '14', '22', '23', '30', '31', '36', '37', '38', '43', '46', '48', '49', '50']       
             for i in range(no_of_joints):
                 try:
-                    torque_data = rospy.wait_for_message("/snake_monster/sensors/SA00" + str(torque_ids[i]) +  "__MoJo/torque", WrenchStamped , 5)
-                    current_data.torque_joint(torque_data, i+1) 
-	    	    print "Here!!"
+                    torque_data = rospy.wait_for_message("/snake_monster/sensors/SA0" + torque_ids[i] +  "__MoJo/torque", WrenchStamped , 0.1 )
+
+                    current_data.torque_joint(torque_data, i+1)
+                    
                 except:
+                    i = i-1 #Retry to get the value
                     pass
 
             #State of each joint!
-            for limb in range(no_legs):
-                for joint_no in range(3):
+            for limb in range(no_legs+1):
+                for joint_no in range(4):
+                    #print limb, joint_no
                     try:
-                        joint_data = rospy.wait_for_message("/snake_monster/L" + str(limb) + "_" + str(joint_no) + "_eff_pos_controller/state", JointControllerState, 5)
-                        current_data.joint_state(joint_data, limb*joint_no + 1)
-	    		print "Here!!"
+                        joint_data = rospy.wait_for_message("/snake_monster/L" + str(limb+1) + "_" + str(joint_no+1) + "_eff_pos_controller/state", JointControllerState, 0.1 )
+                        
+                        current_data.joint_state(joint_data, limb*3 + joint_no + 1)
+                        
                     except:
+                        joint_no = joint_no -1 #Retry to get the value
                         pass
             #State of each foot!    
 
             for limb in range(no_legs):
                 try:
-                    (trans,rot)  = listener.lookupTransform('map', 'foot__leg' + str(limb) + '__INPUT_INTERFACE', rospy.Time(0))
+                    (trans,rot)  = listener.lookupTransform('map', 'foot__leg' + str(limb+1) + '__INPUT_INTERFACE', rospy.Time(0))
                     current_data.end_effector_z[limb] = (trans[2] <  leg_contact_threshold)*1
-	    	    print "Here____!!"
+                    quaternion = (
+                        rot[0],
+                        rot[1],
+                        rot[2],
+                        rot[3])
+                    euler = tf.transformations.euler_from_quaternion(quaternion)
+
+                    current_data.end_effector_angles[3*limb:3*limb + 3] = euler #Roll pitch yaw
+                    print current_data.end_effector_angles[3*limb:3*limb + 3], limb
+
+
+
                 except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+                    limb = limb - 1 #Check until you get the value
                     pass
     
             #Robot position transform!
-            try:
-                (trans,rot)  = listener.lookupTransform('base', 'map', rospy.Time(0))
-                current_data.robot_pose = np.asarray([rot, trans])
-	    	print "Here!!"
-            except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-                pass
+            flag = False
+            while flag == False:
+                try:
+                    (trans,rot)  = listener.lookupTransform('base', 'map', rospy.Time(0))
+                    current_data.robot_pose = np.asarray([rot, trans])
+                    flag = True
+                    print "setting true"
+               
+                except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+                    pass
     
  
 

@@ -36,45 +36,45 @@ no_legs = 6
 leg_contact_threshold = 0.027
 
 class robot_state:
-	#The following are the states that we check for a particular time!
-        imu_state = [];
-	joint_torque = np.zeros(no_of_joints*no_of_torque_directions)
-	joint_positions = np.zeros(no_of_joints)
-	joint_velocities = np.zeros(no_of_joints)
-	robot_pose = np.asarray([0, 0, 0, 0, 0, 0, 1]) #3 Trans vector and 4 quat variables!
-        end_effector_z = np.zeros(no_legs) 
-        	
-	#Call back definition for the IMU on the robot 
-	def imu(self, imu_data):
-    	    self.imu_state = np.asarray([imu_data.orientation.x, imu_data.orientation.y, imu_data.orientation.z, imu_data.orientation.w, imu_data.angular_velocity.x, imu_data.angular_velocity.y, imu_data.angular_velocity.z, imu_data.angular_velocity.y, imu_data.linear_acceleration.x, imu_data.linear_acceleration.y, imu_data.linear_acceleration.z]) 
+    #The following are the states that we check for a particular time!
+    imu_state = [];
+    joint_torque = np.zeros(no_of_joints*no_of_torque_directions)
+    joint_positions = np.zeros(no_of_joints)
+    joint_velocities = np.zeros(no_of_joints)
+    robot_pose = np.asarray([0, 0, 0, 0, 0, 0, 1]) #3 Trans vector and 4 quat variables!
+    end_effector_z = np.zeros(no_legs) 
+            
+    #Call back definition for the IMU on the robot 
+    def imu(self, imu_data):
+        self.imu_state = np.asarray([imu_data.orientation.x, imu_data.orientation.y, imu_data.orientation.z, imu_data.orientation.w, imu_data.angular_velocity.x, imu_data.angular_velocity.y, imu_data.angular_velocity.z, imu_data.angular_velocity.y, imu_data.linear_acceleration.x, imu_data.linear_acceleration.y, imu_data.linear_acceleration.z]) 
 
-	#Joint states callback functions	
-	def joint_state(self, state_data, joint_number):
-                self.joint_positions[joint_number-1] = np.asarray([state_data.process_value])
-                self.joint_velocities[joint_number-1] = np.asarray([state_data.process_value_dot])
+    #Joint states callback functions    
+    def joint_state(self, state_data, joint_number):
+        self.joint_positions[joint_number-1] = np.asarray([state_data.process_value])
+        self.joint_velocities[joint_number-1] = np.asarray([state_data.process_value_dot])
 
-	#Hard code alert! Hardcoded the array indexes. 
-	#The next set of functions are the call back functions that set the joint torques. THe torque sensing has 6 outputs in 3 force directions and 3 torque directions. The state will be one array of all the states, let them be updates as convenient. Felt no need to put locks here. It shouldn't affect the calculations much 
+    #Hard code alert! Hardcoded the array indexes. 
+    #The next set of functions are the call back functions that set the joint torques. THe torque sensing has 6 outputs in 3 force directions and 3 torque directions. The state will be one array of all the states, let them be updates as convenient. Felt no need to put locks here. It shouldn't affect the calculations much 
 
-	#The joint feedback is saved in this variable. 
-	def torque_joint(self, joint_torque, joint_number):
-		self.joint_torque[(joint_number-1)*6:joint_number*6] = np.asarray([joint_torque.wrench.force.x, joint_torque.wrench.force.y, joint_torque.wrench.force.z, joint_torque.wrench.torque.x, joint_torque.wrench.torque.y, joint_torque.wrench.torque.z])
-
-
+    #The joint feedback is saved in this variable. 
+    def torque_joint(self, joint_torque, joint_number):
+        self.joint_torque[(joint_number-1)*6:joint_number*6] = np.asarray([joint_torque.wrench.force.x, joint_torque.wrench.force.y, joint_torque.wrench.force.z, joint_torque.wrench.torque.x, joint_torque.wrench.torque.y, joint_torque.wrench.torque.z])
 
 
 
-class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
+
+
+class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 
     def __init__(self):
         # Launch the simulation with the given launchfile name
-        gazebo_env.GazeboEnv.__init__(self, "GazeboCircuit2SnakeMonsterLidar_v0.launch")
+        gazebo_env.GazeboEnv.__init__(self, "GazeboCustomSnakeMonsterDDPG_v0.launch")
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
         self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
         self.action_space = spaces.Discrete(3) #F,L,R
         self.reward_range = (-np.inf, np.inf)
-	#self.action_space = spaces.Box(low=-self.max_torque, high=self.max_torque, shape=(1,))
+    #self.action_space = spaces.Box(low=-self.max_torque, high=self.max_torque, shape=(1,))
         #self.observation_space = spaces.Box(low=-high, high=high)
 
 
@@ -315,56 +315,56 @@ class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
                 self.pub['L'+'4'+'_'+'3'].publish(cmd.position[0][17])    
 
         data = None
-	current_data = robot_state()
+        current_data = robot_state()
         while data is None:
             #Lidar data. We need to remove this or spoof this!
-	    try:
+            try:
                 data = rospy.wait_for_message('/scan', LaserScan, timeout=5)
             
-	    except:
+            except:
                 pass
             
 
-	    #Imu data!
-	    try:
-    		imu_data = rospy.wait_for_message("/snake_monster/sensors/imu", Imu,5  )
-		current_data.imu(imu_data) 
-	    except:
-		pass
-    		
+            #Imu data!
             try:
-		torque_ids = [1, 2, 3, 5, 13, 14, 22, 23, 30, 31, 36, 37, 38, 43, 46, 48, 49, 50]		
-		for i in range(no_of_joints):
-
-			torque_data = rospy.wait_for_message("/snake_monster/sensors/SA00" + str(torque_ids[i]) +  "__MoJo/torque", WrenchStamped , 5)
-			current_data.torque_joint_state(torque_data, i+1)	
-	    except:
+                imu_data = rospy.wait_for_message("/snake_monster/sensors/imu", Imu,5  )
+                current_data.imu(imu_data) 
+            except:
                 pass
+            
+            
+            torque_ids = [1, 2, 3, 5, 13, 14, 22, 23, 30, 31, 36, 37, 38, 43, 46, 48, 49, 50]       
+            for i in range(no_of_joints):
+                try:
+                    torque_data = rospy.wait_for_message("/snake_monster/sensors/SA00" + str(torque_ids[i]) +  "__MoJo/torque", WrenchStamped , 5)
+                    current_data.torque_joint(torque_data, i+1) 
+                except:
+                    pass
 
-    #State of each joint!
-	    for limb in range(no_legs):
-		for joint_no in range(3)
-    			try:
-				joint_data = rospy.wait_for_message("/snake_monster/L" + str(limb) + "_" + str(joint_no) + "_eff_pos_controller/state", JointControllerState, 5)
-					current_robot_state.joint_state(joint_data, limb*joint_no + 1)
-			except:
-				pass
-	#State of each foot!	
+            #State of each joint!
+            for limb in range(no_legs):
+                for joint_no in range(3):
+                    try:
+                        joint_data = rospy.wait_for_message("/snake_monster/L" + str(limb) + "_" + str(joint_no) + "_eff_pos_controller/state", JointControllerState, 5)
+                        current_data.joint_state(joint_data, limb*joint_no + 1)
+                    except:
+                        pass
+            #State of each foot!    
 
-	    for limb in range(no_legs):
-            	try:
-			(trans,rot)  = listener.lookupTransform('map', 'foot__leg' + str(limb) + '__INPUT_INTERFACE', rospy.Time(0))
-			current_robot_state.end_effector_z[limb] = (trans[2] <  leg_contact_threshold)*1
-	    	except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-        		pass
-	
-	#Robot position transform!
-	    try:
-	    	(trans,rot)  = listener.lookupTransform('base', 'map', rospy.Time(0))
-		current_robot_state.robot_pose = np.asarray([rot, trans])
-	    except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-        	pass
-	
+            for limb in range(no_legs):
+                try:
+                    (trans,rot)  = listener.lookupTransform('map', 'foot__leg' + str(limb) + '__INPUT_INTERFACE', rospy.Time(0))
+                    current_data.end_effector_z[limb] = (trans[2] <  leg_contact_threshold)*1
+                except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+                    pass
+    
+            #Robot position transform!
+            try:
+                (trans,rot)  = listener.lookupTransform('base', 'map', rospy.Time(0))
+                current_data.robot_pose = np.asarray([rot, trans])
+            except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+                pass
+    
  
 
         rospy.wait_for_service('/gazebo/pause_physics')

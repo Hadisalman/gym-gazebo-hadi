@@ -21,6 +21,49 @@ from Functions.Controller import Controller
 from Functions.CPGgs import CPGgs
 
 
+from sensor_msgs.msg import Imu
+from geometry_msgs.msg import WrenchStamped
+from control_msgs.msg import JointControllerState
+from geometry_msgs.msg import PoseStamped
+import tf2_ros
+import tf2_geometry_msgs
+import tf
+
+
+no_of_joints = 18
+no_of_torque_directions = 6
+no_legs = 6
+leg_contact_threshold = 0.027
+
+class robot_state:
+	#The following are the states that we check for a particular time!
+        imu_state = [];
+	joint_torque = np.zeros(no_of_joints*no_of_torque_directions)
+	joint_positions = np.zeros(no_of_joints)
+	joint_velocities = np.zeros(no_of_joints)
+	robot_pose = np.asarray([0, 0, 0, 0, 0, 0, 1]) #3 Trans vector and 4 quat variables!
+        end_effector_z = np.zeros(no_legs) 
+        	
+	#Call back definition for the IMU on the robot 
+	def imu_callback(self, imu_data):
+    	    self.imu_state = np.asarray([imu_data.orientation.x, imu_data.orientation.y, imu_data.orientation.z, imu_data.orientation.w, imu_data.angular_velocity.x, imu_data.angular_velocity.y, imu_data.angular_velocity.z, imu_data.angular_velocity.y, imu_data.linear_acceleration.x, imu_data.linear_acceleration.y, imu_data.linear_acceleration.z]) 
+
+	#Joint states callback functions	
+	def joint_state_callback(self, state_data, joint_number):
+                self.joint_positions[joint_number-1] = np.asarray([state_data.process_value])
+                self.joint_velocities[joint_number-1] = np.asarray([state_data.process_value_dot])
+
+	#Hard code alert! Hardcoded the array indexes. 
+	#The next set of functions are the call back functions that set the joint torques. THe torque sensing has 6 outputs in 3 force directions and 3 torque directions. The state will be one array of all the states, let them be updates as convenient. Felt no need to put locks here. It shouldn't affect the calculations much 
+
+	#The joint feedback is saved in this variable. 
+	def torque_joint_callback(self, joint_torque, joint_number):
+		self.joint_torque[(joint_number-1)*6:joint_number*6] = np.asarray([joint_torque.wrench.force.x, joint_torque.wrench.force.y, joint_torque.wrench.force.z, joint_torque.wrench.torque.x, joint_torque.wrench.torque.y, joint_torque.wrench.torque.z])
+
+
+
+
+
 class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
 
     def __init__(self):
@@ -333,3 +376,8 @@ class GazeboCircuit2SnakeMonsterLidarEnv(gazebo_env.GazeboEnv):
         state = self.discretize_observation(data,5) 
 
         return state
+
+
+
+
+

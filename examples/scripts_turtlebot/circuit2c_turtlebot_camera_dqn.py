@@ -16,7 +16,7 @@ import numpy as np
 from keras.models import Sequential, load_model
 from keras.initializers import normal
 from keras import optimizers
-from keras.optimizers import RMSprop
+from keras.optimizers import RMSprop, Adam
 from keras.layers import Convolution2D, Flatten, ZeroPadding2D
 from keras.layers.core import Dense, Dropout, Activation
 from keras.layers.normalization import BatchNormalization
@@ -26,6 +26,65 @@ from keras.regularizers import l2
 from keras.optimizers import SGD , Adam
 from keras import backend
 import memory
+from IPython import embed
+import tensorflow as tf
+
+def huber_loss(y_true, y_pred, max_grad=1.):
+    """Calculate the huber loss.
+
+    See https://en.wikipedia.org/wiki/Huber_loss
+
+    Parameters
+    ----------
+    y_true: np.array, tf.Tensor
+      Target value.
+    y_pred: np.array, tf.Tensor
+      Predicted value.
+    max_grad: float, optional
+      Positive floating point value. Represents the maximum possible
+      gradient magnitude.
+
+    Returns
+    -------
+    tf.Tensor
+      The huber loss.
+    """
+    # logic
+    # if fabs(diff) <= delta:
+    #     return 0.5 * diff * diff.transpose;
+    # else:
+    #     return delta*(fabs(diff) - 0.5*delta);
+    
+    delta = max_grad # somewhere in piazza. does this need to be a tf constant
+    diff = tf.abs(y_true-y_pred)
+    huber_if_diff_less_than_delta = 0.5*tf.square(diff)
+    huber_if_diff_more_than_delta = delta*(diff - 0.5*delta)
+    is_diff_less_than_delta = tf.less_equal(diff, delta)
+    final = tf.where(is_diff_less_than_delta, huber_if_diff_less_than_delta, huber_if_diff_more_than_delta) 
+    return final
+
+def mean_huber_loss(y_true, y_pred, max_grad=1.):
+    """Return mean huber loss.
+
+    Same as huber_loss, but takes the mean over all values in the
+    output tensor.
+
+    Parameters
+    ----------
+    y_true: np.array, tf.Tensor
+      Target value.
+    y_pred: np.array, tf.Tensor
+      Predicted value.
+    max_grad: float, optional
+      Positive floating point value. Represents the maximum possible
+      gradient magnitude.
+
+    Returns
+    -------
+    tf.Tensor
+      The mean huber loss.
+    """ 
+    return tf.reduce_mean(huber_loss(y_true, y_pred, max_grad)) # todo no need to specify axis right
 
 
 class DeepQ:
@@ -61,20 +120,23 @@ class DeepQ:
     def createModel(self):
         # Network structure must be directly changed here.
         model = Sequential()
-        print(img_rows)
         # backend.set_image_dim_ordering('tf')
-        model.add(Convolution2D(16, 3, 3, subsample=(2,2),dim_ordering="th" ,input_shape=(img_channels,img_rows,img_cols))) #  img_channels
+        model.add(Convolution2D(32, 8, 8, subsample=(4,4),dim_ordering="th" ,input_shape=(img_channels,img_rows,img_cols)))
         model.add(Activation('relu'))
-        model.add(ZeroPadding2D((1, 1)))
-        model.add(Convolution2D(16, 3, 3, subsample=(2,2)))
+        # model.add(ZeroPadding2D((1, 1)))
+        model.add(Convolution2D(64, 4, 4, subsample=(2,2)))
         model.add(Activation('relu'))
-        model.add(MaxPooling2D(pool_size=(2, 2) ,strides=(2,2)))# ,dim_ordering="th"
+        model.add(Convolution2D(64, 3, 3, subsample=(1,1)))
+        model.add(Activation('relu'))
+        # model.add(MaxPooling2D(pool_size=(2, 2) ,strides=(2,2)))# ,dim_ordering="th"
         model.add(Flatten())
-        model.add(Dense(256))
+        model.add(Dense(512))
         model.add(Activation('relu'))
         model.add(Dense(network_outputs))
         #adam = Adam(lr=self.learningRate)
         #model.compile(loss='mse',optimizer=adam)
+        adam = Adam(lr=1e-4)
+        # model.compile(loss=mean_huber_loss, optimizer=adam)        
         model.compile(RMSprop(lr=self.learningRate), 'MSE')
         model.summary()
 
@@ -201,8 +263,9 @@ class DeepQ:
         self.model.save(path)
 
     def loadWeights(self, path):
-        self.model.set_weights(load_model(path).get_weights())
-
+        # self.model.set_weights(load_model(path).get_weights())
+        self.model.load_weights(path)
+        
 def detect_monitor_files(training_dir):
     return [os.path.join(training_dir, f) for f in os.listdir(training_dir) if f.startswith('openaigym')]
 
@@ -219,11 +282,11 @@ if __name__ == '__main__':
     env = gym.make('GazeboCircuit2cTurtlebotCameraNnEnv-v0')
     outdir = '/tmp/gazebo_gym_experiments/'
 
-    continue_execution = False
+    continue_execution = True
     #fill this if continue_execution=True
-    weights_path = '/tmp/turtle_c2c_dqn_ep200.h5' 
-    monitor_path = '/tmp/turtle_c2c_dqn_ep200'
-    params_json  = '/tmp/turtle_c2c_dqn_ep200.json'
+    weights_path = '/tmp/turtle_c2c_dqn_ep2200.h5' 
+    monitor_path = '/tmp/turtle_c2c_dqn_ep2200'
+    params_json  = '/tmp/turtle_c2c_dqn_ep2200.json'
 
     img_rows, img_cols, img_channels = env.img_rows, env.img_cols, env.img_channels
     epochs = 100000
@@ -271,8 +334,8 @@ if __name__ == '__main__':
         deepQ.initNetworks()
         deepQ.loadWeights(weights_path)
 
-        clear_monitor_files(outdir)
-        copy_tree(monitor_path,outdir)
+        # clear_monitor_files(outdir)
+        # copy_tree(monitor_path,outdir)
         # env.monitor.start(outdir, resume=True, seed=None)
 
     last100Rewards = [0] * 100
@@ -292,7 +355,7 @@ if __name__ == '__main__':
 
             action = deepQ.selectAction(qValues, explorationRate)
             newObservation, reward, done, info = env.step(action)
-
+            embed()
             deepQ.addMemory(observation, action, reward, newObservation, done)
             observation = newObservation
 

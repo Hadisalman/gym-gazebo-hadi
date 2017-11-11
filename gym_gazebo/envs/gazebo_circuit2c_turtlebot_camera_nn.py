@@ -1,9 +1,9 @@
+import cv2
 import gym
 import rospy
 import roslaunch
 import time
 import numpy as np
-import cv2
 import sys
 import os
 import random
@@ -39,8 +39,8 @@ class GazeboCircuit2cTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
 
         self.last50actions = [0] * 50
 
-        self.img_rows = 32
-        self.img_cols = 32
+        self.img_rows = 84
+        self.img_cols = 84
         self.img_channels = 1
 
     def calculate_observation(self,data):
@@ -177,7 +177,7 @@ class GazeboCircuit2cTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         #cv_image = skimage.exposure.rescale_intensity(cv_image,out_range=(0,255))
 
 
-        state = cv_image.reshape(1, 1, cv_image.shape[0], cv_image.shape[1])
+        state = cv_image.reshape(cv_image.shape[0], cv_image.shape[1])
         return state, reward, done, {}
 
         # test STACK 4
@@ -240,7 +240,7 @@ class GazeboCircuit2cTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         #cv_image = cv_image[(self.img_rows/20):self.img_rows-(self.img_rows/20),(self.img_cols/10):self.img_cols] #crop image
         #cv_image = skimage.exposure.rescale_intensity(cv_image,out_range=(0,255))
 
-        state = cv_image.reshape(1, 1, cv_image.shape[0], cv_image.shape[1])
+        state = cv_image.reshape(cv_image.shape[0], cv_image.shape[1])
         return state
 
         # test STACK 4

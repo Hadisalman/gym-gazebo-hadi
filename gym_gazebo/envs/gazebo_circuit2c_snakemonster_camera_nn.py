@@ -39,6 +39,7 @@ class GazeboCircuit2cSnakeMonsterCameraNnEnv(gazebo_env.GazeboEnv):
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
         self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
 
+        self.action_space = spaces.Discrete(3) #F,L,R
         self.reward_range = (-np.inf, np.inf)
 
         self.pub={}
@@ -50,9 +51,9 @@ class GazeboCircuit2cSnakeMonsterCameraNnEnv(gazebo_env.GazeboEnv):
                                             Float64, queue_size=10 )
 
         self._seed()
-
+        
         self.last50actions = [0] * 50
-
+        self.ac
         self.img_rows = 32
         self.img_cols = 32
         self.img_channels = 1

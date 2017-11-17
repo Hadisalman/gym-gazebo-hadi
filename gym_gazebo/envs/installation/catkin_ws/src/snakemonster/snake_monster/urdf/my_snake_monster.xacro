@@ -184,7 +184,7 @@
 		<origin xyz="${-width/2} -${leg_y_offset} ${height/2}" rpy="-${PI/2} 0 ${PI/2}"/>
 	</joint>
 
- <xacro:include filename="$(find kobuki_description)/urdf/sensors/lidar_sensor.urdf.xacro" />
+ <!--xacro:include filename="$(find kobuki_description)/urdf/sensors/lidar_sensor.urdf.xacro" />
  <xacro:lidar_sensor
     name="sonar2"
     parent="yrot"
@@ -198,7 +198,7 @@
     ray_count_vertical="1"
     sensor_mesh="lidar_lite_v2_withRay/meshes/lidar_lite_v2_withRay.dae">
     <origin xyz="0 0 0.405" rpy="0 0 1.57"/>
-  </xacro:lidar_sensor>
+  </xacro:lidar_sensor-->
 
   <!-- Import all Gazebo-customization elements -->
   <xacro:include filename="./my_snake_monster.gazebo" />

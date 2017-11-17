@@ -42,7 +42,6 @@ if __name__ == '__main__':
     start_time = time.time()
     total_episodes = 1000000
     highest_reward = 0
-
     for x in range(total_episodes):
         done = False
 
@@ -55,24 +54,34 @@ if __name__ == '__main__':
 
         #render() #defined above, not env.render()
 
-        state = ''.join(map(str, observation))
-	print "Before episode starts"
+        #state = ''.join(map(str, observation))
+	state = [6,6,6,6,6]
+
+	print state
         for i in range(1500):
-	    print "Actions taken loop"
 
             # Pick an action based on the current state
-            action = qlearn.chooseAction(state)
+            #action = qlearn.chooseAction(state)
+	    #Add ddpg position prediction values here!!!
 
+
+	    action = 1
             # Execute the action and get feedback
             observation, reward, done, info = env.step(action)
+	    #done = 0
             cumulated_reward += reward
 
             if highest_reward < cumulated_reward:
                 highest_reward = cumulated_reward
 
-            nextState = ''.join(map(str, observation))
 
-            qlearn.learn(state, action, reward, nextState)
+	    #Get next state from state_integrator here!!!
+            #nextState = ''.join(map(str, observation))
+	    nextState = [6,6,6,6,6]
+	
+
+	    ##Add DDPG Gradient here!!!!	
+            #qlearn.learn(state, action, reward, nextState)
 
             #env.monitor.flush(force=True)
 

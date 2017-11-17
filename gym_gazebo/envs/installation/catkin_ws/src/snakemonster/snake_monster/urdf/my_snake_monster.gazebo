@@ -134,7 +134,7 @@
   </xacro:macro>
 
 
-  <xacro:include filename="$(find kobuki_description)/urdf/sensors/lidar_sensor.urdf.xacro" />
+  <!--xacro:include filename="$(find kobuki_description)/urdf/sensors/lidar_sensor.urdf.xacro" /-->
   
 
   <gazebo reference="base">

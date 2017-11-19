@@ -8,7 +8,6 @@ import tflearn
 import argparse
 import pprint as pp
 from replay_buffer import ReplayBuffer
-
 """
 Gym gazebo for snake monster imports
 """
@@ -20,6 +19,8 @@ import time
 import matplotlib
 import matplotlib.pyplot as plt
 #import liveplot
+
+import IPython
 
 def render():
     render_skip = 0 #Skip first X episodes.
@@ -278,9 +279,9 @@ def train(sess, env, args, actor, critic, actor_noise):
     replay_buffer = ReplayBuffer(int(args['buffer_size']), int(args['random_seed']))
 
     for i in range(int(args['max_episodes'])):
-
+	print "before reset"
         s = env.reset()
-
+	print "after reset"
         ep_reward = 0
         ep_ave_max_q = 0
 
@@ -289,12 +290,14 @@ def train(sess, env, args, actor, critic, actor_noise):
             if args['render_env']:
                 env.render()
 
-            import pdb
-            pdb.set_trace()
             # Added exploration noise
             #a = actor.predict(np.reshape(s, (1, 3))) + (1. / (1. + i))
+            # Execute the action and get feedback
             a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
+	    print a, "Check this value"
+	    a = [1] ##HArdcode alert!!!!!	
 
+            s2, r, terminal, info = env.step(a[0])
             s2, r, terminal, info = env.step(a[0])
 
             replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
@@ -350,19 +353,25 @@ def train(sess, env, args, actor, critic, actor_noise):
                         i, (ep_ave_max_q / float(j))))
                 break
 
-'''
+
 def main(args):
 
     with tf.Session() as sess:
 
-        env = gym.make(args['env'])
+        #env = gym.make(args['env'])
+        env = gym.make('GazeboCustomSnakeMonsterDDPG-v0')
         np.random.seed(int(args['random_seed']))
         tf.set_random_seed(int(args['random_seed']))
         env.seed(int(args['random_seed']))
 
-        state_dim = env.observation_space.shape[0]
+
+	#removed the index
+        state_dim = env.observation_space.shape[1]
         action_dim = env.action_space.shape[0]
         action_bound = env.action_space.high
+
+	#IPython.embed()
+	
         print ('State Dimension : ',state_dim,' Action Dimension : ',action_dim)
         print ('State : ',env.observation_space,'Action : ',env.action_space)
         # Ensure action bound is symmetric
@@ -378,21 +387,16 @@ def main(args):
 
         actor_noise = OrnsteinUhlenbeckActionNoise(mu=np.zeros(action_dim))
 
-        if args['use_gym_monitor']:
-            if not args['render_env']:
-                env = gym.wrappers.Monitor(
-                    env, args['monitor_dir'], video_callable=False, force=True)
-            else:
-                env = gym.wrappers.Monitor(env, args['monitor_dir'], force=True)
+        outdir = '/tmp/gazebo_gym_experiments'
+        env = gym.wrappers.Monitor(env, directory=outdir, force=True, write_upon_reset=True)
 
         train(sess, env, args, actor, critic, actor_noise)
 
-        if args['use_gym_monitor']:
-            env.monitor.close()
+        env.monitor.close()
+    	env.close()
 
-'''
-'''
 if __name__ == '__main__':
+
     parser = argparse.ArgumentParser(description='provide arguments for DDPG agent')
 
     # agent parameters
@@ -420,95 +424,5 @@ if __name__ == '__main__':
 
     pp.pprint(args)
 
+
     main(args)
-
-
-'''
-
-
-if __name__ == '__main__':
-
-    env = gym.make('GazeboCustomSnakeMonsterDDPG-v0')
-
-    outdir = '/tmp/gazebo_gym_experiments'
-    #env.monitor.start(outdir, force=True, seed=None)
-    env = gym.wrappers.Monitor(env, directory=outdir, force=True, write_upon_reset=True)
-
-    #plotter = LivePlot(outdir)
-
-    last_time_steps = np.ndarray(0)
-
-    #qlearn = qlearn.QLearn(actions=range(env.action_space.n),alpha=0.2, gamma=0.8, epsilon=0.9)
-
-    #initial_epsilon = qlearn.epsilon
-
-    epsilon_discount = 0.9986
-
-    start_time = time.time()
-    total_episodes = 1000000
-    highest_reward = 0
-    for x in range(total_episodes):
-        done = False
-
-        cumulated_reward = 0 #Should going forward give more reward then L/R ?
-
-        observation = env.reset()
-
-        #if qlearn.epsilon > 0.05:
-        #    qlearn.epsilon *= epsilon_discount
-
-        #render() #defined above, not env.render()
-
-        #state = ''.join(map(str, observation))
-	state = [6,6,6,6,6]
-
-	print state
-        for i in range(1500):
-
-            # Pick an action based on the current state
-            #action = qlearn.chooseAction(state)
-	    #Add ddpg position prediction values here!!!
-
-
-	    action = 1
-            # Execute the action and get feedback
-            observation, reward, done, info = env.step(action)
-	    #done = 0
-            cumulated_reward += reward
-
-            if highest_reward < cumulated_reward:
-                highest_reward = cumulated_reward
-
-
-	    #Get next state from state_integrator here!!!
-            #nextState = ''.join(map(str, observation))
-	    nextState = [6,6,6,6,6]
-	
-
-	    ##Add DDPG Gradient here!!!!	
-            #qlearn.learn(state, action, reward, nextState)
-
-            #env.monitor.flush(force=True)
-
-            if not(done):
-                state = nextState
-            else:
-                last_time_steps = np.append(last_time_steps, [int(i + 1)])
-                break 
-
-        m, s = divmod(int(time.time() - start_time), 60)
-        h, m = divmod(m, 60)
-        #print ("EP: "+str(x+1)+" - [alpha: "+str(round(qlearn.alpha,2))+" - gamma: "+str(round(qlearn.gamma,2))+" - epsilon: "+str(round(qlearn.epsilon,2))+"] - Reward: "+str(cumulated_reward)+"     Time: %d:%02d:%02d" % (h, m, s))
-
-    #Github table content
-    #print ("\n|"+str(total_episodes)+"|"+str(qlearn.alpha)+"|"+str(qlearn.gamma)+"|"+str(initial_epsilon)+"*"+str(epsilon_discount)+"|"+str(highest_reward)+"| PICTURE |")
-
-    l = last_time_steps.tolist()
-    l.sort()
-
-    #print("Parameters: a="+str)
-    print("Overall score: {:0.2f}".format(last_time_steps.mean()))
-    print("Best 100 score: {:0.2f}".format(reduce(lambda x, y: x + y, l[-100:]) / len(l[-100:])))
-
-    env.monitor.close()
-    env.close()

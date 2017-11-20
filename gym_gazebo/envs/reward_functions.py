@@ -74,7 +74,11 @@ class reward_function:
  	#print velocity_now - velocity_previous
 	accelerations = np.multiply(self.current_state.imu_state[7:10],self.current_state.imu_state[7:10])
 	energy_each = np.multiply(accelerations,velocity_now)	
-	return np.sum(energy_each)
+	total_energy = np.sum(energy_each)
+
+	if total_energy <= 0:
+		total_energy = 0.01
+	return total_energy
 	
 	
     #polygon of support
@@ -93,6 +97,8 @@ class reward_function:
     def control_input(self):
         #The action should be the difference in the state joint angles? Or just the torques 
         input_energy = np.sum(np.square(self.current_state.joint_torque))
+	if input_energy <= 0: # I think we should define a tolerence here maybe ?
+		input_energy = 0.01
 	return input_energy
 
     #Add reward for being normal to the surface
@@ -107,6 +113,8 @@ class reward_function:
 	        contact_angle =  angles[3*limb:3*limb + 3]
 		diff = contact_angle[normal_index] - np.pi
 		total_error = total_error + diff*diff
+	if total_error == 0 :
+		total_error = 0.01
 	return total_error
 
     def total_reward(self):

@@ -29,7 +29,7 @@
 
   <!-- push robot_description to factory and spawn robot in gazebo -->
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
-        args="-z 0.25 -x 6.25 -unpause -urdf -model robot -param robot_description" respawn="false" output="screen" />
+        args="-z 0.25 -x -2 -unpause -urdf -model robot -param robot_description" respawn="false" output="screen" />
 
   <group if="$(arg run_state_publisher)">
     <node pkg="robot_state_publisher" type="robot_state_publisher"  name="rob_st_pub">

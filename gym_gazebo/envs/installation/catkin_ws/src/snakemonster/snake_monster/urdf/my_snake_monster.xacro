@@ -53,7 +53,7 @@
 	<joint name="kdl_dummy_root_to_base" type="fixed">
 		<parent link="kdl_dummy_root"/>
 		<child link="base"/>
-	</joint-->
+	</joint -->
 
 	<!-- base body -->
 	<link name="base">
@@ -239,7 +239,7 @@
   </link>
 
 	<!-- Import all Gazebo-customization elements -->
-	<xacro:include filename="./my_snake_monster.gazebo" />
+	<!--xacro:include filename="./my_snake_monster.gazebo" /-->
 	
 
 	<!-- legs -->
@@ -259,8 +259,8 @@
           	<frameName>world</frameName>
           	<xyzOffsets>0 0 0.0</xyzOffsets>
           	<rpyOffsets>0 0 0.0</rpyOffsets>
-    	</plugin>
-    </gazebo>	
+    		</plugin>
+    	</gazebo>	
 
 
 

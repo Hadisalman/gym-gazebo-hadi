@@ -298,8 +298,7 @@ def train(sess, env, args, actor, critic, actor_noise):
 	    a = [1] ##HArdcode alert!!!!!	
 
             s2, r, terminal, info = env.step(a[0])
-            s2, r, terminal, info = env.step(a[0])
-
+	    #s2  = s_class.serialized_state()
             replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
                               terminal, np.reshape(s2, (actor.s_dim,)))
 

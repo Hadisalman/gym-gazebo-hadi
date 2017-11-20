@@ -95,6 +95,8 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	pi = 3.142
 	self.action_space = spaces.Box(low=-pi, high=pi, shape=(1,))
         self.observation_space = spaces.Box(low=-2*pi, high=2*pi, shape=(1,state_dim))
+	self.previous_state = state_dim*[0]
+
 
         # rospy.init_node('walking_controller', anonymous=True)
         self.pub={}
@@ -189,6 +191,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 pass
 	done = 0
+	self.previous_state = current_data;
 	return current_data
 
 
@@ -196,6 +199,8 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 
 
     def _step(self, action):
+	
+	previous_state = self.previous_state 
 
         cmd = tools.CommandStruct()
         T = 600
@@ -302,7 +307,6 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         except rospy.ServiceException, e:
             print ("/gazebo/pause_physics service call failed")
 
-        #state = [6,6,6,6,6]
 	done = 0
         if not done:
             if action == 0:
@@ -313,7 +317,8 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
             reward = -200
 	
 	serialized_state  = current_state.serialized_state()
-        return serialized_state, reward, done, {}
+        #return current_state, reward, done
+	return serialized_state, reward, done, {}
 
     def _reset(self):
 
@@ -341,7 +346,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         except rospy.ServiceException, e:
             print ("/gazebo/pause_physics service call failed")
 
-        #state = [6,6,6,6,6]
+        state = [6,6,6,6,6]
 
 	#current_state = self.get_state() 
 	#serialized_state  = current_state.serialized_state()

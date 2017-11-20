@@ -67,7 +67,7 @@ WINDOW_LENGTH = 1
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
 parser.add_argument('--env-name', type=str, default='GazeboCircuit2cTurtlebotCameraNnEnv-v0')
-parser.add_argument('--weights', type=str, default='pretrained_weights/turtlebot/GazeboCircuit2cTurtlebotCameraNnEnv-v0_weights_3000000.h5f')
+parser.add_argument('--weights', type=str, default='dqn_GazeboCircuit2cTurtlebotCameraNnEnv-v0_weights.h5f')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
@@ -83,9 +83,9 @@ nb_actions = 3 #env.action_space.n
 input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
 
 
-obs,reward,done,_ =env.step(0)
+# obs,reward,done,_ =env.step(0)
+# embed()
 
-embed()
 model = Sequential()
 if K.image_dim_ordering() == 'tf':
     # (width, height, channels)

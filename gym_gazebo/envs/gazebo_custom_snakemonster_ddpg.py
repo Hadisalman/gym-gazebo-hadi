@@ -116,13 +116,13 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 
 	#publishers for reward function
 	self.reward_pub = {}
-	self.reward_pub['slip_reward'] = rospy.Publisher('/snake_monster/slip_reward',Float64, queue_size=10)
-	self.reward_pub['control_reward'] = rospy.Publisher('/snake_monster/control_reward',Float64, queue_size=10)
-	self.reward_pub['collision_reward'] = rospy.Publisher('/snake_monster/collision_reward',Float64, queue_size=10)
-	self.reward_pub['energy_reward'] = rospy.Publisher('/snake_monster/energy_reward',Float64, queue_size=10) 
-	self.reward_pub['contact_reward'] = rospy.Publisher('/snake_monster/contact_reward',Float64, queue_size=10)
-	self.reward_pub['movement_reward'] = rospy.Publisher('/snake_monster/movement_reward',Float64, queue_size=10)
-	self.reward_pub['acceleration_reward'] = rospy.Publisher('/snake_monster/acceleration_reward',Float64,queue_size=10)
+	self.reward_pub['slip_reward'] = rospy.Publisher('/snake_monster/reward/slip_reward',Float64, queue_size=10)
+	self.reward_pub['control_reward'] = rospy.Publisher('/snake_monster/reward/control_reward',Float64, queue_size=10)
+	self.reward_pub['collision_reward'] = rospy.Publisher('/snake_monster/reward/collision_reward',Float64, queue_size=10)
+	self.reward_pub['energy_reward'] = rospy.Publisher('/snake_monster/reward/energy_reward',Float64, queue_size=10) 
+	self.reward_pub['contact_reward'] = rospy.Publisher('/snake_monster/reward/contact_reward',Float64, queue_size=10)
+	self.reward_pub['movement_reward'] = rospy.Publisher('/snake_monster/reward/movement_reward',Float64, queue_size=10)
+	self.reward_pub['acceleration_reward'] = rospy.Publisher('/snake_monster/reward/acceleration_reward',Float64,queue_size=10)
 
 
 
@@ -331,7 +331,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	if(self.start != 1):
 		reward_object = reward_function(previous_state, current_state)	
 		reward = reward_object.total_reward()
-		publish_reward(reward_object) # publishes the reward function individual values
+		self.publish_reward(reward_object) # publishes the reward function individual values
 	else:
 		self.start = 0	
 		reward = 1
@@ -374,14 +374,14 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	return state_dim*[0]
 
 
-     def publish_reward(self,reward_object):
-         self.reward_pub['slip_reward'].publish(reward_object.slip_avoidance())
-	 self.reward_pub['control_reward'].publish(reward_object.control_input())
-	 self.reward_pub['collision_reward'].publish(reward_object.self_collision())
-	 self.reward_pub['energy_reward'].publish(reward_object.conservation_of_energy())
-	 self.reward_pub['contact_reward'].publish(reward_object.ground_contact())
-	 self.reward_pub['movement_reward'].publish(reward_object.any_movement())
-	 self.reward_pub['acceleration_reward'].publish(reward_object.forward_acceleration())
+    def publish_reward(self,reward_object):
+	self.reward_pub['slip_reward'].publish(reward_object.slip_avoidance())
+	self.reward_pub['control_reward'].publish(reward_object.control_input())
+	self.reward_pub['collision_reward'].publish(reward_object.self_collision())
+	self.reward_pub['energy_reward'].publish(reward_object.conservation_of_energy())
+	self.reward_pub['contact_reward'].publish(reward_object.ground_contact())
+	self.reward_pub['movement_reward'].publish(reward_object.any_movement())
+	self.reward_pub['acceleration_reward'].publish(reward_object.forward_acceleration())
 	
 	
 

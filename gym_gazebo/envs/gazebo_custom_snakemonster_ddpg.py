@@ -12,7 +12,7 @@ from std_msgs.msg import Float64
 from sensor_msgs.msg import LaserScan
 
 from gym.utils import seeding
-    
+
 import numpy as np
 from copy import copy
 import time
@@ -29,12 +29,14 @@ import tf2_ros
 import tf2_geometry_msgs
 import tf
 
+from reward_functions import reward_function
+import time
 
 no_of_joints = 18
 no_of_torque_directions = 6
 no_legs = 6
 leg_contact_threshold = 0.027
-state_dim = 161
+state_dim = 185
 
 class robot_state:
     #The following are the states that we check for a particular time!
@@ -69,15 +71,17 @@ class robot_state:
         temp = self.joint_torque
         temp = temp.tolist()
         torque.extend(temp)
-	
         total_serialized.extend(torque)
         total_serialized.extend(self.imu_state.tolist())
         total_serialized.extend(self.joint_positions.tolist())
         total_serialized.extend(self.joint_velocities.tolist())
+	print self.robot_pose,"hhh"
 	pose_list =  self.robot_pose.tolist()
-	
+	print pose_list	
 	total_serialized.extend(pose_list[0])
 	total_serialized.extend(pose_list[1])
+	total_serialized.extend(self.end_effector_z.tolist())
+	total_serialized.extend(self.end_effector_angles.tolist())
         return total_serialized
 
 class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
@@ -95,8 +99,11 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	pi = 3.142
 	self.action_space = spaces.Box(low=-pi, high=pi, shape=(1,))
         self.observation_space = spaces.Box(low=-2*pi, high=2*pi, shape=(1,state_dim))
-	self.previous_state = state_dim*[0]
-
+	
+	#time.sleep(2)
+	self.previous_state = robot_state()
+	self.current_state = robot_state()
+	self.start = 1
 
         # rospy.init_node('walking_controller', anonymous=True)
         self.pub={}
@@ -175,17 +182,16 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
                 current_data.end_effector_angles[3*limb:3*limb + 3] = euler #Roll pitch yaw
                 #print current_data.end_effector_angles[3*limb:3*limb + 3], limb
 
-
-
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 limb = limb - 1 #Check until you get the value
                 pass
-        #Robot position transform!
+        
+	#Robot position transform!
         flag = False
         while flag == False:
             try:
                 (trans,rot)  = listener.lookupTransform('base', 'map', rospy.Time(0))
-                current_data.robot_pose = np.asarray([rot, trans])
+                current_data.robot_pose = np.asarray([trans, rot])
                 flag = True
            
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
@@ -307,15 +313,15 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         except rospy.ServiceException, e:
             print ("/gazebo/pause_physics service call failed")
 
+
+	if(self.start != 1):
+		reward_object = reward_function(previous_state, current_state)	
+		reward = reward_object.total_reward()
+	else:
+		self.start = 0	
+		reward = 1
+		
 	done = 0
-        if not done:
-            if action == 0:
-                reward = 5
-            else:
-                reward = 1
-        else:
-            reward = -200
-	
 	serialized_state  = current_state.serialized_state()
         #return current_state, reward, done
 	return serialized_state, reward, done, {}
@@ -346,7 +352,6 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         except rospy.ServiceException, e:
             print ("/gazebo/pause_physics service call failed")
 
-        state = [6,6,6,6,6]
 
 	#current_state = self.get_state() 
 	#serialized_state  = current_state.serialized_state()

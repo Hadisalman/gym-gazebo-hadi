@@ -1,13 +1,13 @@
 ##Author Saurabh Nair; snnair@andrew.cmu.edu
 import numpy as np
-
+import copy as cp
 
 class reward_function:
   
     #def __init__(self, state_1, state_2, action_taken, dt, start_state, goal_state):
     def __init__(self, state_1, state_2):
-        self.current_state = state_2
-        self.previous_state = state_1
+        self.current_state = cp.deepcopy(state_2)
+        self.previous_state = cp.deepcopy(state_1)
         #self.action = action_taken
         #self.goal_state = goal_state
         #self.start_state = start_state

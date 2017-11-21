@@ -298,6 +298,7 @@ THEANO_FLAGS=mode=FAST_RUN,device=gpu,floatX=float32
 
 ### Some bugs
 * While `catkin-make` ing, if you face any problem about `glog_src`, follow the solution on `http://forum.erlerobotics.com/t/error-with-catkin-make-j-4/3465/4`. Basically you have to move `fix-unused-typedef-warning.patch` file from `../catkin_ws/src/glog_catkin` to `../catkin_ws/src`.
+* `sudo apt-get install libbluetooth-dev` and `sudo apt-get install libcwiid-dev libcwiid1`
 ---
 
 ## Usage

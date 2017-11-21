@@ -16,7 +16,7 @@ import numpy as np
 from keras.models import Sequential, load_model
 from keras.initializers import normal
 from keras import optimizers
-from keras.optimizers import RMSprop
+from keras.optimizers import RMSprop, Adam
 from keras.layers import Convolution2D, Flatten, ZeroPadding2D
 from keras.layers.core import Dense, Dropout, Activation
 from keras.layers.normalization import BatchNormalization
@@ -212,8 +212,9 @@ class DeepQ:
         self.model.save(path)
 
     def loadWeights(self, path):
-        self.model.set_weights(load_model(path).get_weights())
-
+        # self.model.set_weights(load_model(path).get_weights())
+        self.model.load_weights(path)
+        
 def detect_monitor_files(training_dir):
     return [os.path.join(training_dir, f) for f in os.listdir(training_dir) if f.startswith('openaigym')]
 
@@ -230,11 +231,11 @@ if __name__ == '__main__':
     env = gym.make('GazeboCircuit2cTurtlebotCameraNnEnv-v0')
     outdir = 'gazebo_gym_experiments/'
 
-    continue_execution = False
+    continue_execution = True
     #fill this if continue_execution=True
-    weights_path = '/tmp/turtle_c2c_dqn_ep200.h5' 
-    monitor_path = '/tmp/turtle_c2c_dqn_ep200'
-    params_json  = '/tmp/turtle_c2c_dqn_ep200.json'
+    weights_path = '/tmp/turtle_c2c_dqn_ep2200.h5' 
+    monitor_path = '/tmp/turtle_c2c_dqn_ep2200'
+    params_json  = '/tmp/turtle_c2c_dqn_ep2200.json'
 
     img_rows, img_cols, img_channels = env.img_rows, env.img_cols, env.img_channels
     epochs = 100000
@@ -282,8 +283,8 @@ if __name__ == '__main__':
         deepQ.initNetworks()
         deepQ.loadWeights(weights_path)
 
-        clear_monitor_files(outdir)
-        copy_tree(monitor_path,outdir)
+        # clear_monitor_files(outdir)
+        # copy_tree(monitor_path,outdir)
         # env.monitor.start(outdir, resume=True, seed=None)
 
     last100Rewards = [0] * 100
@@ -303,7 +304,7 @@ if __name__ == '__main__':
 
             action = deepQ.selectAction(qValues, explorationRate)
             newObservation, reward, done, info = env.step(action)
-
+            embed()
             deepQ.addMemory(observation, action, reward, newObservation, done)
             observation = newObservation
 

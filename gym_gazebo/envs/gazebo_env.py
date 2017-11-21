@@ -9,7 +9,6 @@ from os import path
 
 from std_srvs.srv import Empty
 
-
 class GazeboEnv(gym.Env):
     """Superclass for all Gazebo environments.
     """

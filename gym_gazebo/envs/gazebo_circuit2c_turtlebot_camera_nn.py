@@ -1,9 +1,9 @@
+import cv2
 import gym
 import rospy
 import roslaunch
 import time
 import numpy as np
-import cv2
 import sys
 import os
 import random
@@ -176,7 +176,7 @@ class GazeboCircuit2cTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         #cv_image = skimage.exposure.rescale_intensity(cv_image,out_range=(0,255))
 
 
-        state = cv_image.reshape(1, 1, cv_image.shape[0], cv_image.shape[1])
+        state = cv_image.reshape(cv_image.shape[0], cv_image.shape[1])
         return state, reward, done, {}
 
         # test STACK 4

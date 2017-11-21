@@ -16,7 +16,7 @@ class image_converter:
   def __init__(self):
 
     self.bridge = CvBridge()
-    self.image_sub = rospy.Subscriber("/camera/rgb/image_raw",Image,self.callback)
+    self.image_sub = rospy.Subscriber("/sensors/cam/im_raw",Image,self.callback)
 
   def callback(self,data):
     try:
@@ -25,7 +25,7 @@ class image_converter:
       print(e)
 
     cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
-    cv_image = cv2.resize(cv_image, (32, 32))
+    # cv_image = cv2.resize(cv_image, (32, 32))
     #cv_image = skimage.exposure.rescale_intensity(cv_image,out_range=(0,255))
 
     cv2.namedWindow("Image window", cv2.WINDOW_NORMAL)

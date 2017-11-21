@@ -22,7 +22,6 @@ from skimage import transform, color, exposure
 from skimage.transform import rotate
 from skimage.viewer import ImageViewer
 
-
 class GazeboCircuit2cTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
 
     def __init__(self):
@@ -163,7 +162,7 @@ class GazeboCircuit2cTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
                 reward = 0.5 / float(center_detour+1)
         else:
             # reward = -1
-            reward = -100
+            reward = -50
 
         #print("detour= "+str(center_detour)+" :: reward= "+str(reward)+" ::action="+str(action))
 

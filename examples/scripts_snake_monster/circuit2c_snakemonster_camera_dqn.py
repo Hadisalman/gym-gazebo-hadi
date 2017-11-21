@@ -5,6 +5,7 @@ Based on:
 https://github.com/vmayoral/basic_reinforcement_learning
 https://gist.github.com/wingedsheep/4199594b02138dd427c22a540d6d6b8d
 '''
+import cv2
 import gym
 import gym_gazebo
 import time

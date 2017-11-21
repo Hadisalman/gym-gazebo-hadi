@@ -32,6 +32,11 @@ import tf
 from reward_functions import reward_function
 import time
 
+import moveit_commander
+from moveit_msgs.msg import RobotState
+from sensor_msgs.msg import JointState
+
+
 no_of_joints = 18
 no_of_torque_directions = 6
 no_legs = 6
@@ -48,7 +53,7 @@ class robot_state:
     robot_pose = np.asarray([0, 0, 0, 0, 0, 0, 1]) #3 Trans vector and 4 quat variables!
     end_effector_z = np.zeros(no_legs) 
     end_effector_angles = np.zeros(no_legs*3) 
-            
+    
     #Call back definition for the IMU on the robot 10 vals 
     def imu(self, imu_data):
         self.imu_state = np.asarray([imu_data.orientation.x, imu_data.orientation.y, imu_data.orientation.z, imu_data.orientation.w, imu_data.angular_velocity.x, imu_data.angular_velocity.y, imu_data.angular_velocity.z, imu_data.linear_acceleration.x, imu_data.linear_acceleration.y, imu_data.linear_acceleration.z]) 

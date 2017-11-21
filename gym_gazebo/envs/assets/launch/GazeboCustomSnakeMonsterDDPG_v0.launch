@@ -35,6 +35,8 @@
 
   <node name="tf_bot_body" pkg="snake_monster_control" type="tf_broad.py" />
   <!--node name="state_integrator" pkg="snake_monster_control" type="state_integrator.py" /-->
+  <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find snake_monster)/urdf/my_snake_monster.xacro'" />
+
 
 	  
 </launch>

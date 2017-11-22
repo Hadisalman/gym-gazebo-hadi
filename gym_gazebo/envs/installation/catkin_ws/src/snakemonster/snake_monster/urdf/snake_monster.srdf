@@ -48,6 +48,13 @@
     <disable_collisions link1="SA049__MoJo__INPUT_INTERFACE" link2="SA049__MoJo__OUTPUT_BODY" reason="Adjacent" />
     <disable_collisions link1="SA005__MoJo__INPUT_INTERFACE" link2="SA005__MoJo__OUTPUT_BODY" reason="Adjacent" />
 
+    <disable_collisions link1="SA003__MoJo__INPUT_INTERFACE" link2="SA003__MoJo__INPUT_INTERFACE__COLLAR" reason="Adjacent" />
+    <disable_collisions link1="SA013__MoJo__INPUT_INTERFACE" link2="SA013__MoJo__INPUT_INTERFACE__COLLAR" reason="Adjacent" />
+    <disable_collisions link1="SA050__MoJo__INPUT_INTERFACE" link2="SA050__MoJo__INPUT_INTERFACE__COLLAR" reason="Adjacent" />
+    <disable_collisions link1="SA046__MoJo__INPUT_INTERFACE" link2="SA046__MoJo__INPUT_INTERFACE__COLLAR" reason="Adjacent" />
+    <disable_collisions link1="SA049__MoJo__INPUT_INTERFACE" link2="SA049__MoJo__INPUT_INTERFACE__COLLAR" reason="Adjacent" />
+    <disable_collisions link1="SA005__MoJo__INPUT_INTERFACE" link2="SA005__MoJo__INPUT_INTERFACE__COLLAR" reason="Adjacent" />
+
     <disable_collisions link1="extender__leg5__INPUT_INTERFACE" link2="SA003__MoJo__OUTPUT_BODY" reason="Adjacent" />
     <disable_collisions link1="extender__leg1__INPUT_INTERFACE" link2="SA013__MoJo__OUTPUT_BODY" reason="Adjacent" />
     <disable_collisions link1="extender__leg4__INPUT_INTERFACE" link2="SA050__MoJo__OUTPUT_BODY" reason="Adjacent" />

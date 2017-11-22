@@ -218,15 +218,17 @@
 	<xacro:leg leg="leg5" mod1="${L5_1}" mod2="${L5_2}" mod3="${L5_3}"/>
 	<xacro:leg leg="leg6" mod1="${L6_1}" mod2="${L6_2}" mod3="${L6_3}"/>
 
-	<gazebo>
-		<plugin name="p3d" filename="libgazebo_ros_p3d.so">
-        	<alwaysOn>true</alwaysOn>
-          	<updateRate>1000.0</updateRate>
-          	<bodyName>base</bodyName>
-          	<topicName>nav_msgs</topicName>
-          	<frameName>world</frameName>
-          	<xyzOffsets>0 0 0.0</xyzOffsets>
-          	<rpyOffsets>0 0 0.0</rpyOffsets>
-    	</plugin>
-    </gazebo>	
+-       <gazebo>
+-               <plugin name="p3d" filename="libgazebo_ros_p3d.so">
+-               <alwaysOn>true</alwaysOn>
+-               <updateRate>1000.0</updateRate>
+-               <bodyName>base</bodyName>
+-               <topicName>nav_msgs</topicName>
+-               <frameName>world</frameName>
+-               <xyzOffsets>0 0 0.0</xyzOffsets>
+-               <rpyOffsets>0 0 0.0</rpyOffsets>
+-       </plugin>
+-    </gazebo> 
+
+
 </robot>

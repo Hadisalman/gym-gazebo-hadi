@@ -8,6 +8,7 @@ import tflearn
 import argparse
 import pprint as pp
 from replay_buffer import ReplayBuffer
+import rospy
 """
 Gym gazebo for snake monster imports
 """
@@ -279,9 +280,7 @@ def train(sess, env, args, actor, critic, actor_noise):
     replay_buffer = ReplayBuffer(int(args['buffer_size']), int(args['random_seed']))
 
     for i in range(int(args['max_episodes'])):
-	print "before reset"
         s = env.reset()
-	print "after reset"
         ep_reward = 0
         ep_ave_max_q = 0
 
@@ -295,8 +294,7 @@ def train(sess, env, args, actor, critic, actor_noise):
             # Execute the action and get feedback
             a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
 	    print a, "Check this value"
-	    a = [1] ##HArdcode alert!!!!!	
-
+	    #a = [1] ##HArdcode alert!!!!!	
             s2, r, terminal, info = env.step(a[0])
 	    #s2  = s_class.serialized_state()
             replay_buffer.add(np.reshape(s, (actor.s_dim,)), np.reshape(a, (actor.a_dim,)), r,
@@ -366,7 +364,7 @@ def main(args):
 
 	#removed the index
         state_dim = env.observation_space.shape[1]
-        action_dim = env.action_space.shape[0]
+        action_dim = env.action_space.shape[1]
         action_bound = env.action_space.high
 
 	#IPython.embed()
@@ -374,7 +372,7 @@ def main(args):
         print ('State Dimension : ',state_dim,' Action Dimension : ',action_dim)
         print ('State : ',env.observation_space,'Action : ',env.action_space)
         # Ensure action bound is symmetric
-        assert (env.action_space.high == -env.action_space.low)
+        #assert (env.action_space.high == -env.action_space.low)
 
         actor = ActorNetwork(sess, state_dim, action_dim, action_bound,
                              float(args['actor_lr']), float(args['tau']))

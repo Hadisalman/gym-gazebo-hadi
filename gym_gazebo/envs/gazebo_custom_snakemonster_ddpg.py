@@ -35,6 +35,8 @@ import time
 import moveit_commander
 #from moveit_msgs.msg import RobotState
 #from sensor_msgs.msg import JointState
+from snake_monster.srv import *
+
 
 
 no_of_joints = 18
@@ -42,6 +44,21 @@ no_of_torque_directions = 6
 no_legs = 6
 leg_contact_threshold = 0.027
 state_dim = 185
+action_dimension = 18
+lol = 0
+
+#Self collision detection function
+def is_self_collision():
+    rospy.wait_for_service('check_hit', 2)
+    try:
+        collision_check = rospy.ServiceProxy('check_hit', check_hit)
+        resp1 = collision_check()
+        print resp1.status
+        return resp1.status
+    except rospy.ServiceException, e:
+        print "Service call failed: %s"%e
+
+
 
 class robot_state:
     #The following are the states that we check for a particular time!
@@ -80,9 +97,7 @@ class robot_state:
         total_serialized.extend(self.imu_state.tolist())
         total_serialized.extend(self.joint_positions.tolist())
         total_serialized.extend(self.joint_velocities.tolist())
-	print self.robot_pose,"hhh"
 	pose_list =  self.robot_pose.tolist()
-	print pose_list	
 	total_serialized.extend(pose_list[0])
 	total_serialized.extend(pose_list[1])
 	total_serialized.extend(self.end_effector_z.tolist())
@@ -102,7 +117,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         
 	#Change Here!!!
 	pi = 3.142
-	self.action_space = spaces.Box(low=-pi, high=pi, shape=(1,))
+	self.action_space = spaces.Box(low=-pi, high=pi, shape=(1,action_dimension))
         self.observation_space = spaces.Box(low=-2*pi, high=2*pi, shape=(1,state_dim))
 	
 	#time.sleep(2)
@@ -147,6 +162,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         #Imu data!
         current_data = robot_state()
 	flag = False
+	
 
     	listener = tf.TransformListener()
     	rate = rospy.Rate(100.0)
@@ -224,7 +240,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 
 
     def _step(self, action):
-	
+	print "in step"	
 	previous_state = self.previous_state 
 
         cmd = tools.CommandStruct()
@@ -291,41 +307,94 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 
 
             #if action == 0: #FORWARD
+	global lol
+        #Only forward action is taken!       
+	start = int(round(time.time() * 1000)) 
+	#while cnt <230:
+	if(lol ==0):
+		lol = 1.5
+	else:
+		 lol = 0
 	
-        #Only forward action is taken!        
-	while cnt <230:
-        	cpg['direction']= cpg['forward']
-        	cpg = CPGgs(cpg, cnt, dt)
-        	cpg['feetLog'].append(cpg['feetTemp'])
-        	cmd.position = cpg['legs']
-        	cnt=cnt +1
-        	self.pub['L'+'1'+'_'+'1'].publish(cmd.position[0][0])
-        	self.pub['L'+'1'+'_'+'2'].publish(cmd.position[0][1])
-        	self.pub['L'+'1'+'_'+'3'].publish(cmd.position[0][2])
-		self.pub['L'+'6'+'_'+'1'].publish(cmd.position[0][3])
-		self.pub['L'+'6'+'_'+'2'].publish(cmd.position[0][4])
-		self.pub['L'+'6'+'_'+'3'].publish(cmd.position[0][5])
-		self.pub['L'+'2'+'_'+'1'].publish(cmd.position[0][6])
-		self.pub['L'+'2'+'_'+'2'].publish(cmd.position[0][7])
-		self.pub['L'+'2'+'_'+'3'].publish(cmd.position[0][8])
-		self.pub['L'+'5'+'_'+'1'].publish(cmd.position[0][9])
-		self.pub['L'+'5'+'_'+'2'].publish(cmd.position[0][10])
-		self.pub['L'+'5'+'_'+'3'].publish(cmd.position[0][11])
-		self.pub['L'+'3'+'_'+'1'].publish(cmd.position[0][12])
-		self.pub['L'+'3'+'_'+'2'].publish(cmd.position[0][13])
-		self.pub['L'+'3'+'_'+'3'].publish(cmd.position[0][14])
-		self.pub['L'+'4'+'_'+'1'].publish(cmd.position[0][15])
-		self.pub['L'+'4'+'_'+'2'].publish(cmd.position[0][16])
+	while abs(int(round(time.time() * 1000)) - start)< 500:
+	
+        	#cpg['direction']= cpg['forward']
+        	#cpg = CPGgs(cpg, cnt, dt)
+        	#cpg['feetLog'].append(cpg['feetTemp'])
+        	#cmd.position = cpg['legs']
+        	#cnt=cnt +1
+        	#self.pub['L'+'1'+'_'+'1'].publish(cmd.position[0][0])
+        	#self.pub['L'+'1'+'_'+'2'].publish(cmd.position[0][1])
+        	#self.pub['L'+'1'+'_'+'3'].publish(cmd.position[0][2])
+		#self.pub['L'+'6'+'_'+'1'].publish(cmd.position[0][3])
+		#self.pub['L'+'6'+'_'+'2'].publish(cmd.position[0][4])
+		#self.pub['L'+'6'+'_'+'3'].publish(cmd.position[0][5])
+		#self.pub['L'+'2'+'_'+'1'].publish(cmd.position[0][6])
+		#self.pub['L'+'2'+'_'+'2'].publish(cmd.position[0][7])
+		#self.pub['L'+'2'+'_'+'3'].publish(cmd.position[0][8])
+		#self.pub['L'+'5'+'_'+'1'].publish(cmd.position[0][9])
+		#self.pub['L'+'5'+'_'+'2'].publish(cmd.position[0][10])
+		#self.pub['L'+'5'+'_'+'3'].publish(cmd.position[0][11])
+		#self.pub['L'+'3'+'_'+'1'].publish(cmd.position[0][12])
+		#self.pub['L'+'3'+'_'+'2'].publish(cmd.position[0][13])
+		#self.pub['L'+'3'+'_'+'3'].publish(cmd.position[0][14])
+		#self.pub['L'+'4'+'_'+'1'].publish(cmd.position[0][15])
+		#self.pub['L'+'4'+'_'+'2'].publish(cmd.position[0][16])
+        	
+		#self.pub['L'+'1'+'_'+'1'].publish(0)
+        	#self.pub['L'+'1'+'_'+'2'].publish(0)
+        	#self.pub['L'+'1'+'_'+'3'].publish(0)
+		#self.pub['L'+'6'+'_'+'1'].publish(0)
+		#self.pub['L'+'6'+'_'+'2'].publish(0)
+		#self.pub['L'+'6'+'_'+'3'].publish(0)
+		#self.pub['L'+'2'+'_'+'1'].publish(0)
+		#self.pub['L'+'2'+'_'+'2'].publish(0)
+		#self.pub['L'+'2'+'_'+'3'].publish(0)
+		#self.pub['L'+'5'+'_'+'1'].publish(0)
+		#self.pub['L'+'5'+'_'+'2'].publish(0)
+		#self.pub['L'+'5'+'_'+'3'].publish(0)
+		#self.pub['L'+'3'+'_'+'1'].publish(0)
+		#self.pub['L'+'3'+'_'+'2'].publish(0)
+		#self.pub['L'+'3'+'_'+'3'].publish(0)
+		#self.pub['L'+'4'+'_'+'1'].publish(0)
+		#self.pub['L'+'4'+'_'+'2'].publish(0)
+		#print cmd.position[0][16], "JUst to confirm", cnt
 		#self.pub['L'+'4'+'_'+'3'].publish(cmd.position[0][17])
-		self.pub['L'+'4'+'_'+'3'].publish(action) 
+		#self.pub['L'+'4'+'_'+'3'].publish(lol)
+		#self.pub['L'+'4'+'_'+'3'].publish(action) 
+		#if(cnt==200):
+        
+        	self.pub['L'+'1'+'_'+'1'].publish(action[0])
+        	self.pub['L'+'1'+'_'+'2'].publish(action[1])
+        	self.pub['L'+'1'+'_'+'3'].publish(action[2])
+		self.pub['L'+'6'+'_'+'1'].publish(action[3])
+		self.pub['L'+'6'+'_'+'2'].publish(action[4])
+		self.pub['L'+'6'+'_'+'3'].publish(action[5])
+		self.pub['L'+'2'+'_'+'1'].publish(action[6])
+		self.pub['L'+'2'+'_'+'2'].publish(action[7])
+		self.pub['L'+'2'+'_'+'3'].publish(action[8])
+		self.pub['L'+'5'+'_'+'1'].publish(action[9])
+		self.pub['L'+'5'+'_'+'2'].publish(action[10])
+		self.pub['L'+'5'+'_'+'3'].publish(action[11])
+		self.pub['L'+'3'+'_'+'1'].publish(action[12])
+		self.pub['L'+'3'+'_'+'2'].publish(action[13])
+		self.pub['L'+'3'+'_'+'3'].publish(action[14])
+		self.pub['L'+'4'+'_'+'1'].publish(action[15])
+		self.pub['L'+'4'+'_'+'2'].publish(action[16])
+		self.pub['L'+'4'+'_'+'3'].publish(action[17])
 
-	     
+	#self.pub['L'+'4'+'_'+'3'].publish(0)
+
+	end = int(round(time.time() * 1000))
+	print start, end, end - start
         data = None
         #current_data = robot_state()
+   	#Collision check
+   	print is_self_collision(), "Collision check is"
    
+        rospy.wait_for_service('/gazebo/pause_physics')
 	current_state = self.get_state() 
 
-        rospy.wait_for_service('/gazebo/pause_physics')
         try:
             #resp_pause = pause.call()
             self.pause()

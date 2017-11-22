@@ -113,24 +113,6 @@
       </plugin>
     </gazebo>
     
-    <!-- Gazebo 5 contact sensor element isn't working -->
-     <gazebo reference="foot__leg1__INPUT_INTERFACE"> 
-       <sensor name="leg1_contact_sensor" type="contact"> 
-     	<always_on>true</always_on> 
-     	<update_rate>50</update_rate> 
-     	<contact> 
-     	  <collision>leg1_foot_collision_collision</collision> 
-     	</contact> 
-     	<plugin name="leg1_ros_bumper_contacts" filename="libgazebo_ros_bumper.so"> 
-     	  <robotNamespace>/snake_monster</robotNamespace> 
-     	  <bumperTopicName>sensors/leg1_bumper</bumperTopicName> 
-     	  <frameName>world</frameName> 
-     	</plugin> 
-       </sensor> 
-     </gazebo> 
-
-    <!-- Lidar sensor -->
-
   </xacro:macro>
 
 

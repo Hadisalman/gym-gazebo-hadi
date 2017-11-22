@@ -1,0 +1,51 @@
+<?xml version="1.0" ?>
+<!--This does not replace URDF, and is not an extension of URDF.
+    This is a format for representing semantic information about the robot structure.
+    A URDF file must exist for this robot as well, where the joints and the links that are referenced are defined
+-->
+<robot name="snake_monster">
+    <group name="endeffector">
+	<link name="iiwa_link_ee" />
+    </group>
+    <!--GROUP STATES: Purpose: Define a named state for a particular group, in terms of joint values. This is useful to define states like 'folded arms'-->
+    <group_state name="home" group="manipulator">
+        <joint name="iiwa_joint_1" value="0" />
+        <joint name="iiwa_joint_2" value="0" />
+        <joint name="iiwa_joint_3" value="0" />
+        <joint name="iiwa_joint_4" value="0" />
+        <joint name="iiwa_joint_5" value="0" />
+        <joint name="iiwa_joint_6" value="0" />
+        <joint name="iiwa_joint_7" value="0" />
+        <joint name="iiwa_joint_8" value="0" />
+        <joint name="iiwa_joint_9" value="0" />
+        <joint name="iiwa_joint_10" value="0" />
+        <joint name="iiwa_joint_11" value="0" />
+        <joint name="iiwa_joint_12" value="0" />
+        <joint name="iiwa_joint_13" value="0" />
+        <joint name="iiwa_joint_14" value="0" />
+        <joint name="iiwa_joint_15" value="0" />
+        <joint name="iiwa_joint_16" value="0" />
+        <joint name="iiwa_joint_17" value="0" />
+        <joint name="iiwa_joint_18" value="0" />
+    </group_state>
+    <!--END EFFECTOR: Purpose: Represent information about an end effector.-->
+    <end_effector name="moveit_ee" parent_link="iiwa_link_ee" group="endeffector"/>
+    <disable_collisions link1="iiwa_link_0" link2="iiwa_link_1" reason="Adjacent" />
+    <disable_collisions link1="iiwa_link_0" link2="iiwa_link_2" reason="Never" />
+    <disable_collisions link1="iiwa_link_0" link2="iiwa_link_3" reason="Never" />
+    <disable_collisions link1="iiwa_link_0" link2="iiwa_link_4" reason="Never" />
+    <disable_collisions link1="iiwa_link_1" link2="iiwa_link_2" reason="Adjacent" />
+    <disable_collisions link1="iiwa_link_1" link2="iiwa_link_3" reason="Never" />
+    <disable_collisions link1="iiwa_link_1" link2="iiwa_link_4" reason="Never" />
+    <disable_collisions link1="iiwa_link_1" link2="iiwa_link_5" reason="Never" />
+    <disable_collisions link1="iiwa_link_1" link2="iiwa_link_6" reason="Never" />
+    <disable_collisions link1="iiwa_link_1" link2="iiwa_link_7" reason="Never" />
+    <disable_collisions link1="iiwa_link_2" link2="iiwa_link_3" reason="Adjacent" />
+    <disable_collisions link1="iiwa_link_2" link2="iiwa_link_4" reason="Never" />
+    <disable_collisions link1="iiwa_link_2" link2="iiwa_link_5" reason="Never" />
+    <disable_collisions link1="iiwa_link_2" link2="iiwa_link_6" reason="Never" />
+    <disable_collisions link1="iiwa_link_2" link2="iiwa_link_7" reason="Never" />
+    <disable_collisions link1="iiwa_link_3" link2="iiwa_link_4" reason="Adjacent" />
+    <disable_collisions link1="iiwa_link_3" link2="iiwa_link_5" reason="Never" />
+    <disable_collisions link1="iiwa_link_3" link2="iiwa_link_6" reason="Never" />
+</robot>

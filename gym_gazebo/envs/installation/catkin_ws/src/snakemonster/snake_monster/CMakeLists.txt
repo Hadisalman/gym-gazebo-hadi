@@ -26,11 +26,14 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   roslib
   message_generation
+  moveit_core
+  moveit_ros_planning
+  moveit_ros_planning_interface
 )
-generate_messages(
-  DEPENDENCIES
-  std_msgs
-  )
+#generate_messages(
+#  DEPENDENCIES
+#  std_msgs
+#  )
 
 find_package(cmake_modules REQUIRED)
 
@@ -75,11 +78,10 @@ find_package(cmake_modules REQUIRED)
 # )
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+ add_service_files(
+   FILES
+   check_hit.srv
+ )
 
 ## Generate actions in the 'action' folder
 # add_action_files(
@@ -124,10 +126,9 @@ find_package(cmake_modules REQUIRED)
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES snake_monster
-#  CATKIN_DEPENDS roscpp rospy std_msgs
-#  DEPENDS system_lib
+CATKIN_DEPENDS
+moveit_core
+moveit_ros_planning_interface
 )
 
 ###########
@@ -154,14 +155,19 @@ include_directories(
 
 ## Declare a C++ executable
 add_executable(joint_state_publisher src/joint_state_publisher.cpp)
+add_executable(collision_detector src/collision_publisher.cpp)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
-# add_dependencies(snake_monster_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+ add_dependencies(collision_detector ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(
   joint_state_publisher
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(
+  collision_detector
   ${catkin_LIBRARIES}
 )
 

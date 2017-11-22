@@ -33,8 +33,8 @@ from reward_functions import reward_function
 import time
 
 import moveit_commander
-from moveit_msgs.msg import RobotState
-from sensor_msgs.msg import JointState
+#from moveit_msgs.msg import RobotState
+#from sensor_msgs.msg import JointState
 
 
 no_of_joints = 18
@@ -42,7 +42,6 @@ no_of_torque_directions = 6
 no_legs = 6
 leg_contact_threshold = 0.027
 state_dim = 185
-cnt = 0
 
 class robot_state:
     #The following are the states that we check for a particular time!
@@ -281,9 +280,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         elbows = list(range(3,18,3))
 
         sampleIter = 600
-	global cnt
-        if cnt > 229:
-		cnt = 0
+	cnt = 0
     
 
         rospy.wait_for_service('/gazebo/unpause_physics')
@@ -292,33 +289,36 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         except rospy.ServiceException, e:
                 print ("/gazebo/unpause_physics service call failed")
 
+
             #if action == 0: #FORWARD
 	
         #Only forward action is taken!        
-        cpg['direction']= cpg['forward']
-        cpg = CPGgs(cpg, cnt, dt)
-        cpg['feetLog'].append(cpg['feetTemp'])
-        cmd.position = cpg['legs']
-        cnt=cnt +1
-        self.pub['L'+'1'+'_'+'1'].publish(cmd.position[0][0])
-        self.pub['L'+'1'+'_'+'2'].publish(cmd.position[0][1])
-        self.pub['L'+'1'+'_'+'3'].publish(cmd.position[0][2])
-        self.pub['L'+'6'+'_'+'1'].publish(cmd.position[0][3])
-        self.pub['L'+'6'+'_'+'2'].publish(cmd.position[0][4])
-        self.pub['L'+'6'+'_'+'3'].publish(cmd.position[0][5])
-        self.pub['L'+'2'+'_'+'1'].publish(cmd.position[0][6])
-        self.pub['L'+'2'+'_'+'2'].publish(cmd.position[0][7])
-        self.pub['L'+'2'+'_'+'3'].publish(cmd.position[0][8])
-        self.pub['L'+'5'+'_'+'1'].publish(cmd.position[0][9])
-        self.pub['L'+'5'+'_'+'2'].publish(cmd.position[0][10])
-        self.pub['L'+'5'+'_'+'3'].publish(cmd.position[0][11])
-        self.pub['L'+'3'+'_'+'1'].publish(cmd.position[0][12])
-        self.pub['L'+'3'+'_'+'2'].publish(cmd.position[0][13])
-        self.pub['L'+'3'+'_'+'3'].publish(cmd.position[0][14])
-        self.pub['L'+'4'+'_'+'1'].publish(cmd.position[0][15])
-        self.pub['L'+'4'+'_'+'2'].publish(cmd.position[0][16])
-        #self.pub['L'+'4'+'_'+'3'].publish(cmd.position[0][17])
-        self.pub['L'+'4'+'_'+'3'].publish(action) 
+	while cnt <230:
+        	cpg['direction']= cpg['forward']
+        	cpg = CPGgs(cpg, cnt, dt)
+        	cpg['feetLog'].append(cpg['feetTemp'])
+        	cmd.position = cpg['legs']
+        	cnt=cnt +1
+        	self.pub['L'+'1'+'_'+'1'].publish(cmd.position[0][0])
+        	self.pub['L'+'1'+'_'+'2'].publish(cmd.position[0][1])
+        	self.pub['L'+'1'+'_'+'3'].publish(cmd.position[0][2])
+		self.pub['L'+'6'+'_'+'1'].publish(cmd.position[0][3])
+		self.pub['L'+'6'+'_'+'2'].publish(cmd.position[0][4])
+		self.pub['L'+'6'+'_'+'3'].publish(cmd.position[0][5])
+		self.pub['L'+'2'+'_'+'1'].publish(cmd.position[0][6])
+		self.pub['L'+'2'+'_'+'2'].publish(cmd.position[0][7])
+		self.pub['L'+'2'+'_'+'3'].publish(cmd.position[0][8])
+		self.pub['L'+'5'+'_'+'1'].publish(cmd.position[0][9])
+		self.pub['L'+'5'+'_'+'2'].publish(cmd.position[0][10])
+		self.pub['L'+'5'+'_'+'3'].publish(cmd.position[0][11])
+		self.pub['L'+'3'+'_'+'1'].publish(cmd.position[0][12])
+		self.pub['L'+'3'+'_'+'2'].publish(cmd.position[0][13])
+		self.pub['L'+'3'+'_'+'3'].publish(cmd.position[0][14])
+		self.pub['L'+'4'+'_'+'1'].publish(cmd.position[0][15])
+		self.pub['L'+'4'+'_'+'2'].publish(cmd.position[0][16])
+		#self.pub['L'+'4'+'_'+'3'].publish(cmd.position[0][17])
+		self.pub['L'+'4'+'_'+'3'].publish(action) 
+
 	     
         data = None
         #current_data = robot_state()

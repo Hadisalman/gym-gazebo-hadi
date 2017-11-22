@@ -38,5 +38,7 @@
   <param name="robot_description" command="$(find xacro)/xacro --inorder '$(find snake_monster)/urdf/my_snake_monster.xacro'" />
 
 
+  <node name="collision_detector" pkg="snake_monster" type="collision_detector"/>
+
 	  
 </launch>

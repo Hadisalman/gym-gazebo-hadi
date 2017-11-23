@@ -332,10 +332,9 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 			self.pub['L'+'4'+'_'+'1'].publish(cmd.position[0][15])
 			self.pub['L'+'4'+'_'+'2'].publish(cmd.position[0][16])
         		self.pub['L'+'4'+'_'+'3'].publish(cmd.position[0][17])
-			if cnt % 10 == 0 and sampling_done == False:
+			if cnt % 2 == 0 and sampling_done == False and sample_count<100:
 				sample_count += 1 
-				log_joint_angles[sample_count][:] = cmd.position[0][:]
-				
+				log_joint_angles[sample_count-1][:] = cmd.position[0][:]
 				if sample_count == log_joint_angles.shape[0]-1 :
 					np.savetxt('joint_angles.csv',log_joint_angles,delimiter=",")
 					sampling_done == True

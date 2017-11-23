@@ -306,7 +306,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	log_joint_angles = np.zeros([100,18])
         sampling_done = False
 	sample_count = -1
-	if model = 'cpg':
+	if model == 'cpg':
 	#only forward action is taken
 		while cnt <230:
         		cpg['direction']= cpg['forward']
@@ -336,7 +336,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 				sample_count += 1 
 				log_joint_angles[sample_count][:] = cmd.position[0][:]
 				
-				if sample_count == log_joints_angles.shape[0]-1 :
+				if sample_count == log_joint_angles.shape[0]-1 :
 					np.savetxt('joint_angles.csv',log_joint_angles,delimiter=",")
 					sampling_done == True
 			

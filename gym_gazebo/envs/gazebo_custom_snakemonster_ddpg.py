@@ -46,7 +46,7 @@ leg_contact_threshold = 0.027
 state_dim = 185
 action_dimension = 18
 lol = 0
-
+model = 'cpg' #define model here
 #Self collision detection function
 def is_self_collision():
     rospy.wait_for_service('check_hit', 2)
@@ -142,13 +142,8 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	self.reward_pub['energy_reward'] = rospy.Publisher('/snake_monster/reward/energy_reward',Float64, queue_size=10) 
 	self.reward_pub['contact_reward'] = rospy.Publisher('/snake_monster/reward/contact_reward',Float64, queue_size=10)
 	self.reward_pub['movement_reward'] = rospy.Publisher('/snake_monster/reward/movement_reward',Float64, queue_size=10)
-	self.reward_pub['acceleration_reward'] = rospy.Publisher('/snake_monster/reward/acceleration_reward',Float64,queue_size=10)
+	self.reward_pub['acceleration_reward'] = rospy.Publisher('/snake_monster/reward/acceleration_reward',Float64,queue_size=10)	
 
-
-
-
-	
-	
         self._seed()
 
     def _seed(self, seed=None):
@@ -307,86 +302,68 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 
 
             #if action == 0: #FORWARD
-	global lol
-        #Only forward action is taken!       
-	start = int(round(time.time() * 1000)) 
-	#while cnt <230:
-	if(lol ==0):
-		lol = 1.5
-	else:
-		 lol = 0
-	
-	while abs(int(round(time.time() * 1000)) - start)< 500:
-	
-        	#cpg['direction']= cpg['forward']
-        	#cpg = CPGgs(cpg, cnt, dt)
-        	#cpg['feetLog'].append(cpg['feetTemp'])
-        	#cmd.position = cpg['legs']
-        	#cnt=cnt +1
-        	#self.pub['L'+'1'+'_'+'1'].publish(cmd.position[0][0])
-        	#self.pub['L'+'1'+'_'+'2'].publish(cmd.position[0][1])
-        	#self.pub['L'+'1'+'_'+'3'].publish(cmd.position[0][2])
-		#self.pub['L'+'6'+'_'+'1'].publish(cmd.position[0][3])
-		#self.pub['L'+'6'+'_'+'2'].publish(cmd.position[0][4])
-		#self.pub['L'+'6'+'_'+'3'].publish(cmd.position[0][5])
-		#self.pub['L'+'2'+'_'+'1'].publish(cmd.position[0][6])
-		#self.pub['L'+'2'+'_'+'2'].publish(cmd.position[0][7])
-		#self.pub['L'+'2'+'_'+'3'].publish(cmd.position[0][8])
-		#self.pub['L'+'5'+'_'+'1'].publish(cmd.position[0][9])
-		#self.pub['L'+'5'+'_'+'2'].publish(cmd.position[0][10])
-		#self.pub['L'+'5'+'_'+'3'].publish(cmd.position[0][11])
-		#self.pub['L'+'3'+'_'+'1'].publish(cmd.position[0][12])
-		#self.pub['L'+'3'+'_'+'2'].publish(cmd.position[0][13])
-		#self.pub['L'+'3'+'_'+'3'].publish(cmd.position[0][14])
-		#self.pub['L'+'4'+'_'+'1'].publish(cmd.position[0][15])
-		#self.pub['L'+'4'+'_'+'2'].publish(cmd.position[0][16])
-        	
-		#self.pub['L'+'1'+'_'+'1'].publish(0)
-        	#self.pub['L'+'1'+'_'+'2'].publish(0)
-        	#self.pub['L'+'1'+'_'+'3'].publish(0)
-		#self.pub['L'+'6'+'_'+'1'].publish(0)
-		#self.pub['L'+'6'+'_'+'2'].publish(0)
-		#self.pub['L'+'6'+'_'+'3'].publish(0)
-		#self.pub['L'+'2'+'_'+'1'].publish(0)
-		#self.pub['L'+'2'+'_'+'2'].publish(0)
-		#self.pub['L'+'2'+'_'+'3'].publish(0)
-		#self.pub['L'+'5'+'_'+'1'].publish(0)
-		#self.pub['L'+'5'+'_'+'2'].publish(0)
-		#self.pub['L'+'5'+'_'+'3'].publish(0)
-		#self.pub['L'+'3'+'_'+'1'].publish(0)
-		#self.pub['L'+'3'+'_'+'2'].publish(0)
-		#self.pub['L'+'3'+'_'+'3'].publish(0)
-		#self.pub['L'+'4'+'_'+'1'].publish(0)
-		#self.pub['L'+'4'+'_'+'2'].publish(0)
-		#print cmd.position[0][16], "JUst to confirm", cnt
-		#self.pub['L'+'4'+'_'+'3'].publish(cmd.position[0][17])
-		#self.pub['L'+'4'+'_'+'3'].publish(lol)
-		#self.pub['L'+'4'+'_'+'3'].publish(action) 
-		#if(cnt==200):
-        
-        	self.pub['L'+'1'+'_'+'1'].publish(action[0])
-        	self.pub['L'+'1'+'_'+'2'].publish(action[1])
-        	self.pub['L'+'1'+'_'+'3'].publish(action[2])
-		self.pub['L'+'6'+'_'+'1'].publish(action[3])
-		self.pub['L'+'6'+'_'+'2'].publish(action[4])
-		self.pub['L'+'6'+'_'+'3'].publish(action[5])
-		self.pub['L'+'2'+'_'+'1'].publish(action[6])
-		self.pub['L'+'2'+'_'+'2'].publish(action[7])
-		self.pub['L'+'2'+'_'+'3'].publish(action[8])
-		self.pub['L'+'5'+'_'+'1'].publish(action[9])
-		self.pub['L'+'5'+'_'+'2'].publish(action[10])
-		self.pub['L'+'5'+'_'+'3'].publish(action[11])
-		self.pub['L'+'3'+'_'+'1'].publish(action[12])
-		self.pub['L'+'3'+'_'+'2'].publish(action[13])
-		self.pub['L'+'3'+'_'+'3'].publish(action[14])
-		self.pub['L'+'4'+'_'+'1'].publish(action[15])
-		self.pub['L'+'4'+'_'+'2'].publish(action[16])
-		self.pub['L'+'4'+'_'+'3'].publish(action[17])
+	global model
+	log_joint_angles = np.zeros([100,18])
+        sampling_done = False
+	sample_count = -1
+	if model = 'cpg':
+	#only forward action is taken
+		while cnt <230:
+        		cpg['direction']= cpg['forward']
+        		cpg = CPGgs(cpg, cnt, dt)
+        		cpg['feetLog'].append(cpg['feetTemp'])
+        		cmd.position = cpg['legs']
+        		cnt=cnt +1
+        		self.pub['L'+'1'+'_'+'1'].publish(cmd.position[0][0])
+        		self.pub['L'+'1'+'_'+'2'].publish(cmd.position[0][1])
+        		self.pub['L'+'1'+'_'+'3'].publish(cmd.position[0][2])
+			self.pub['L'+'6'+'_'+'1'].publish(cmd.position[0][3])
+			self.pub['L'+'6'+'_'+'2'].publish(cmd.position[0][4])
+			self.pub['L'+'6'+'_'+'3'].publish(cmd.position[0][5])
+			self.pub['L'+'2'+'_'+'1'].publish(cmd.position[0][6])
+			self.pub['L'+'2'+'_'+'2'].publish(cmd.position[0][7])
+			self.pub['L'+'2'+'_'+'3'].publish(cmd.position[0][8])
+			self.pub['L'+'5'+'_'+'1'].publish(cmd.position[0][9])
+			self.pub['L'+'5'+'_'+'2'].publish(cmd.position[0][10])
+			self.pub['L'+'5'+'_'+'3'].publish(cmd.position[0][11])
+			self.pub['L'+'3'+'_'+'1'].publish(cmd.position[0][12])
+			self.pub['L'+'3'+'_'+'2'].publish(cmd.position[0][13])
+			self.pub['L'+'3'+'_'+'3'].publish(cmd.position[0][14])
+			self.pub['L'+'4'+'_'+'1'].publish(cmd.position[0][15])
+			self.pub['L'+'4'+'_'+'2'].publish(cmd.position[0][16])
+        		self.pub['L'+'4'+'_'+'3'].publish(cmd.position[0][17])
+			if cnt % 10 == 0 and sampling_done == False:
+				sample_count += 1 
+				log_joint_angles[sample_count][:] = cmd.position[0][:]
+				
+				if sample_count == log_joints_angles.shape[0]-1 :
+					np.savetxt('joint_angles.csv',log_joint_angles,delimiter=",")
+					sampling_done == True
+			
+	elif model == 'ddpg' :
+		start = int(round(time.time() * 1000))  	
+ 		while abs(int(round(time.time() * 1000)) - start)< 500:       	
+			
+	      		self.pub['L'+'1'+'_'+'1'].publish(action[0])
+        		self.pub['L'+'1'+'_'+'2'].publish(action[1])
+        		self.pub['L'+'1'+'_'+'3'].publish(action[2])
+			self.pub['L'+'6'+'_'+'1'].publish(action[3])
+			self.pub['L'+'6'+'_'+'2'].publish(action[4])
+			self.pub['L'+'6'+'_'+'3'].publish(action[5])
+			self.pub['L'+'2'+'_'+'1'].publish(action[6])
+			self.pub['L'+'2'+'_'+'2'].publish(action[7])
+			self.pub['L'+'2'+'_'+'3'].publish(action[8])
+			self.pub['L'+'5'+'_'+'1'].publish(action[9])
+			self.pub['L'+'5'+'_'+'2'].publish(action[10])
+			self.pub['L'+'5'+'_'+'3'].publish(action[11])
+			self.pub['L'+'3'+'_'+'1'].publish(action[12])
+			self.pub['L'+'3'+'_'+'2'].publish(action[13])
+			self.pub['L'+'3'+'_'+'3'].publish(action[14])
+			self.pub['L'+'4'+'_'+'1'].publish(action[15])
+			self.pub['L'+'4'+'_'+'2'].publish(action[16])
+			self.pub['L'+'4'+'_'+'3'].publish(action[17])
 
-	#self.pub['L'+'4'+'_'+'3'].publish(0)
-
-	end = int(round(time.time() * 1000))
-	print start, end, end - start
+	
         data = None
         #current_data = robot_state()
    	#Collision check

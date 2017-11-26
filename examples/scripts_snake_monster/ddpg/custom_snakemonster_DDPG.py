@@ -272,6 +272,13 @@ def train(sess, env, args, actor, critic, actor_noise):
     sess.run(tf.global_variables_initializer())
     writer = tf.summary.FileWriter(args['summary_dir'], sess.graph)
 
+    # Checkpoint directory. Tensorflow assumes this directory already exists so we need to create it
+    checkpoint_dir = os.path.abspath(args['checkpoint_dir'])
+    checkpoint_prefix = os.path.join(checkpoint_dir, "model")
+    if not os.path.exists(checkpoint_dir):
+        os.makedirs(checkpoint_dir)
+    saver = tf.train.Saver(tf.global_variables(), max_to_keep=5)
+
     # Initialize target network weights
     actor.update_target_network()
     critic.update_target_network()
@@ -336,7 +343,7 @@ def train(sess, env, args, actor, critic, actor_noise):
             s = s2
             ep_reward += r
 
-            if terminal:
+            if terminal or j == int(args['max_episode_len'])-1:
 
                 summary_str = sess.run(summary_ops, feed_dict={
                     summary_vars[0]: ep_reward,
@@ -350,6 +357,10 @@ def train(sess, env, args, actor, critic, actor_noise):
                         i, (ep_ave_max_q / float(j))))
                 break
 
+        #save the model to a checkpoint file
+        if i % args['checkpoint_frequency'] == 0:
+            path = saver.save(sess, checkpoint_prefix, global_step=i)
+            print("Saved model checkpoint to {}\n".format(path))
 
 def main(args):
 
@@ -413,6 +424,8 @@ if __name__ == '__main__':
     parser.add_argument('--use-gym-monitor', help='record gym results', action='store_true')
     parser.add_argument('--monitor-dir', help='directory for storing gym results', default='./results/gym_ddpg')
     parser.add_argument('--summary-dir', help='directory for storing tensorboard info', default='./results/tf_ddpg')
+    parser.add_argument('--checkpoint-dir', help='directory for saving the model', default='./results/checkpoints_ddpg')
+    parser.add_argument('--checkpoint-frequency', help='save at what frequency', default=20)
 
     parser.set_defaults(render_env=False)
     parser.set_defaults(use_gym_monitor=True)

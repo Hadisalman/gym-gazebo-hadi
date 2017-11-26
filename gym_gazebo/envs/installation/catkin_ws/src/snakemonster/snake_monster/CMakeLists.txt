@@ -30,10 +30,6 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_ros_planning
   moveit_ros_planning_interface
 )
-#generate_messages(
-#  DEPENDENCIES
-#  std_msgs
-#  )
 
 find_package(cmake_modules REQUIRED)
 
@@ -91,10 +87,10 @@ find_package(cmake_modules REQUIRED)
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+ generate_messages(
+   DEPENDENCIES
+   std_msgs
+ )
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -116,6 +112,7 @@ find_package(cmake_modules REQUIRED)
 #   cfg/DynReconf2.cfg
 # )
 
+#generate_messages()
 ###################################
 ## catkin specific configuration ##
 ###################################
@@ -142,6 +139,7 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
 )
+
 
 ## Declare a C++ library
 # add_library(snake_monster

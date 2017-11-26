@@ -1,0 +1,11 @@
+moveit_setup_assistant_config:
+  URDF:
+    package: snake_monster
+    relative_path: urdf_temp/snake_monster.xacro
+    use_jade_xacro: true
+  SRDF:
+    relative_path: config/snake_monster.srdf
+  CONFIG:
+    author_name: saurabh
+    author_email: saurabh.nk@gmail.com
+    generated_timestamp: 1511423808

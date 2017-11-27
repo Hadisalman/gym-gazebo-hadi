@@ -19,6 +19,7 @@ import random
 import time
 import matplotlib
 import matplotlib.pyplot as plt
+import os
 #import liveplot
 
 import IPython
@@ -56,12 +57,12 @@ class ActorNetwork(object):
         self.tau = tau
 
         # Actor Network
-        self.inputs, self.out, self.scaled_out = self.create_actor_network()
-
+        self.inputs, self.out, self.scaled_out = self.create_actor_network('actor')
+	#self.save_scaled_out = tf.get_variable('save_scaled_out',self.scaled_out)
         self.network_params = tf.trainable_variables()
 
         # Target Network
-        self.target_inputs, self.target_out, self.target_scaled_out = self.create_actor_network()
+        self.target_inputs, self.target_out, self.target_scaled_out = self.create_actor_network('target')
 
         self.target_network_params = tf.trainable_variables()[
             len(self.network_params):]
@@ -87,8 +88,11 @@ class ActorNetwork(object):
         self.num_trainable_vars = len(
             self.network_params) + len(self.target_network_params)
 
-    def create_actor_network(self):
-        inputs = tflearn.input_data(shape=[None, self.s_dim])
+    def create_actor_network(self,network_type):
+        if network_type == 'actor':
+	    inputs = tflearn.input_data(shape=[None, self.s_dim],name='actor_inputs')
+	else:
+	    inputs = tflearn.input_data(shape=[None,self.s_dim],name='actor_target_inputs')
         net = tflearn.fully_connected(inputs, 400)
         net = tflearn.layers.normalization.batch_normalization(net)
         net = tflearn.activations.relu(net)
@@ -100,7 +104,10 @@ class ActorNetwork(object):
         out = tflearn.fully_connected(
             net, self.a_dim, activation='tanh', weights_init=w_init)
         # Scale output to -action_bound to action_bound
-        scaled_out = tf.multiply(out, self.action_bound)
+	if network_type == 'actor':
+            scaled_out = tf.multiply(out, self.action_bound,name='actor_scaled_out')
+	elif network_type == 'target':
+	    scaled_out = tf.multiply(out,self.action_bound,name='actor_target_scaled_out')
         return inputs, out, scaled_out
 
     def train(self, inputs, a_gradient):
@@ -277,7 +284,10 @@ def train(sess, env, args, actor, critic, actor_noise):
     checkpoint_prefix = os.path.join(checkpoint_dir, "model")
     if not os.path.exists(checkpoint_dir):
         os.makedirs(checkpoint_dir)
+    #import pdb
+    #pdb.set_trace()
     saver = tf.train.Saver(tf.global_variables(), max_to_keep=5)
+    #saver = tf.train.Saver({"actor_outputs ":actor.save_scaled_out},max_to_keep=5)
 
     # Initialize target network weights
     actor.update_target_network()
@@ -357,8 +367,8 @@ def train(sess, env, args, actor, critic, actor_noise):
                         i, (ep_ave_max_q / float(j))))
                 break
 
-        #save the model to a checkpoint file
-        if i % args['checkpoint_frequency'] == 0:
+       	#save the model to a checkpoint file
+        if i % int(args['checkpoint_frequency']) == 0:
             path = saver.save(sess, checkpoint_prefix, global_step=i)
             print("Saved model checkpoint to {}\n".format(path))
 
@@ -377,7 +387,7 @@ def main(args):
         state_dim = env.observation_space.shape[1]
         action_dim = env.action_space.shape[1]
         action_bound = env.action_space.high
-
+	
 	#IPython.embed()
 	
         print ('State Dimension : ',state_dim,' Action Dimension : ',action_dim)
@@ -416,7 +426,7 @@ if __name__ == '__main__':
     parser.add_argument('--minibatch-size', help='size of minibatch for minibatch-SGD', default=64)
 
     # run parameters
-    parser.add_argument('--env', help='choose the gym env- tested on {Pendulum-v0}', default='Pendulum-v0')
+    parser.add_argument('--env', help='choose the gym env- tested on {Pendulum-v0}', default='SnakeMonster_DDPG-V0')
     parser.add_argument('--random-seed', help='random seed for repeatability', default=1234)
     parser.add_argument('--max-episodes', help='max num of episodes to do while training', default=50000)
     parser.add_argument('--max-episode-len', help='max length of 1 episode', default=1000)

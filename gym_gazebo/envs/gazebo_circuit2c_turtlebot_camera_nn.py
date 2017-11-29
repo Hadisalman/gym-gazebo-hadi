@@ -155,11 +155,11 @@ class GazeboCircuit2cTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         # 3 actions
         if not done:
             if action == 0:
-                reward = 1 / float(center_detour+1)
+                reward = 10 / float(center_detour+1)
             elif action_sum > 45: #L or R looping
                 reward = -0.5
             else: #L or R no looping
-                reward = 0.5 / float(center_detour+1)
+                reward = 5 / float(center_detour+1)
         else:
             # reward = -1
             reward = -50

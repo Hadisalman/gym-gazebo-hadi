@@ -286,7 +286,7 @@ if __name__ == '__main__':
         discountFactor = 0.99
         memorySize = 1000000
         network_inputs = 100
-        network_outputs = 21
+        network_outputs = env.action_space
         network_structure = [300,300]
         current_epoch = 0
 

@@ -14,7 +14,6 @@ from sensor_msgs.msg import LaserScan
 from gym.utils import seeding
 
 class GazeboMazeTurtlebotLidarEnv(gazebo_env.GazeboEnv):
-
     def __init__(self):
         # Launch the simulation with the given launchfile name
         gazebo_env.GazeboEnv.__init__(self, "GazeboMazeTurtlebotLidar_v0.launch")

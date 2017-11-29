@@ -37,6 +37,11 @@ register(
     entry_point='gym_gazebo.envs:GazeboRoundTurtlebotLidarEnv',
     # More arguments here
 )
+register(
+    id='GazeboFirstworldTurtlebotLidar-v0',
+    entry_point ='gym_gazebo.envs:GazeboFirstworldTurtlebotLidarEnv',
+    # More arguments here
+)
 
 # Erle-Copter envs
 register(

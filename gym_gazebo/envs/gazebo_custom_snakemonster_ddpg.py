@@ -373,7 +373,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
  		while abs(int(round(time.time() * 1000)) - start)< 500:       	
 			
 
-			
+			'''	
 	      		self.pub['L'+'1'+'_'+'1'].publish(action[0])
         		self.pub['L'+'1'+'_'+'2'].publish(action[1])
         		self.pub['L'+'1'+'_'+'3'].publish(action[2])
@@ -392,7 +392,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 			self.pub['L'+'4'+'_'+'1'].publish(action[15])
 			self.pub['L'+'4'+'_'+'2'].publish(action[16])
 			self.pub['L'+'4'+'_'+'3'].publish(action[17])
-			
+			'''
 				
 			'''
 			self.pub['L'+'1'+'_'+'1'].publish(np.pi/2)
@@ -413,27 +413,27 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 			self.pub['L'+'4'+'_'+'1'].publish(0)
 			self.pub['L'+'4'+'_'+'2'].publish(0)
 			self.pub['L'+'4'+'_'+'3'].publish(np.pi/6)
-				
+			'''	
 		
 			self.pub['L'+'1'+'_'+'1'].publish(np.pi/2)
         		self.pub['L'+'1'+'_'+'2'].publish(np.pi/2)
-        		self.pub['L'+'1'+'_'+'3'].publish(np.pi/2)
-			self.pub['L'+'6'+'_'+'1'].publish(np.pi/2)
-			self.pub['L'+'6'+'_'+'2'].publish(np.pi/2)
-			self.pub['L'+'6'+'_'+'3'].publish(np.pi/2)
-			self.pub['L'+'2'+'_'+'1'].publish(np.pi/2)
-			self.pub['L'+'2'+'_'+'2'].publish(np.pi/2)
-			self.pub['L'+'2'+'_'+'3'].publish(np.pi/2)
-			self.pub['L'+'5'+'_'+'1'].publish(np.pi/2)
-			self.pub['L'+'5'+'_'+'2'].publish(np.pi/2)
-			self.pub['L'+'5'+'_'+'3'].publish(np.pi/2)
-			self.pub['L'+'3'+'_'+'1'].publish(np.pi/2)
-			self.pub['L'+'3'+'_'+'2'].publish(np.pi/2)
-			self.pub['L'+'3'+'_'+'3'].publish(np.pi/2)
-			self.pub['L'+'4'+'_'+'1'].publish(np.pi/2)
-			self.pub['L'+'4'+'_'+'2'].publish(np.pi/2)
-			self.pub['L'+'4'+'_'+'3'].publish(np.pi/2)
-			'''
+        		self.pub['L'+'1'+'_'+'3'].publish(0)
+			self.pub['L'+'6'+'_'+'1'].publish(np.pi/3)
+			self.pub['L'+'6'+'_'+'2'].publish(0)
+			self.pub['L'+'6'+'_'+'3'].publish(0)
+			self.pub['L'+'2'+'_'+'1'].publish(0)
+			self.pub['L'+'2'+'_'+'2'].publish(0)
+			self.pub['L'+'2'+'_'+'3'].publish(0)
+			self.pub['L'+'5'+'_'+'1'].publish(-np.pi/3)
+			self.pub['L'+'5'+'_'+'2'].publish(0)
+			self.pub['L'+'5'+'_'+'3'].publish(0)
+			self.pub['L'+'3'+'_'+'1'].publish(0)
+			self.pub['L'+'3'+'_'+'2'].publish(0)
+			self.pub['L'+'3'+'_'+'3'].publish(0)
+			self.pub['L'+'4'+'_'+'1'].publish(0)
+			self.pub['L'+'4'+'_'+'2'].publish(0)
+			self.pub['L'+'4'+'_'+'3'].publish(0)
+			
 
 			#if lol == 0 : 
 			#	self.pub['L'+'4'+'_'+'3'].publish(0)
@@ -447,7 +447,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         #current_data = robot_state()
    	#Collision check
    	#print is_self_collision(), "Collision check is"
-   
+  	is_self_collision() 
 	current_state = self.get_state(False)
         rospy.wait_for_service('/gazebo/pause_physics')
 	'''
@@ -499,10 +499,9 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	#	reward = 1
 		
 	done = 0
-	t1 = 1200 # Episode start time - current time
-	term_conditions = self.term_cond(current_state,t1)
+	term_condition = self.term_cond(current_state)
 	
-	done = term_conditions[0]
+	done = term_condition
 	#pdb.set_trace()	
 	# Use term_conditions[1] to check if timeout or collision
 	serialized_state  = current_state.serialized_state()
@@ -589,13 +588,11 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	self.reward_pub['acceleration_reward'].publish(reward_object.forward_acceleration())
 	self.reward_pub['forward_movement_reward'].publish(reward_object.forward_movement())
 
-    def term_cond(self,state,time):
-	roll_thres = float(3.1415/6) # Hard-coded using observed values
-	pitch_thres = float(3.1415/6) # Hard-coded using observed values
+    def term_cond(self,state):
+	roll_thres = float(np.pi/6) # Hard-coded using observed values
+	pitch_thres = float(np.pi/6) # Hard-coded using observed values
 	z_thres = 0.1 # Hard-coded using observed values
 	#z_tol = 4.65*0.000001 # Hard-coded
-	terminal_time = 1800 # Milliseconds, CURRENTLY ARBITRARY!
-	premat = 1 # Set premature end -> true as default
 	done = 0 # Set done -> incomplete as default
 	q1 = np.array(state.robot_pose[1])
 	curr_euler_pose = np.array(tf.transformations.euler_from_quaternion(q1))
@@ -603,20 +600,29 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	curr_euler_imu = np.array(tf.transformations.euler_from_quaternion(q2))
 	
 	#pdb.set_trace() 
-	if((abs(curr_euler_pose[0])>roll_thres)or(abs(curr_euler_pose[1])>pitch_thres)or(abs(curr_euler_imu[0])>roll_thres)or(~np.any(state.end_effector_z))or(abs(state.robot_pose[0][2])>z_thres)): 
-	# or(state.joint_positions>=joint_angles_lim)or(abs(curr_euler_imu[1])>pitch_thres)
+	if(abs(curr_euler_pose[0])>roll_thres):
+	    rospy.logwarn("Robot Pose Roll threshold exceeded")
+	    done = 1
+	if(abs(curr_euler_pose[1])>pitch_thres):
+	    rospy.logwarn("Robot Pose Pitch threshold exceeded")
+	    done = 1
+	if(abs(curr_euler_imu[0])>roll_thres):
+	    rospy.logwarn("IMU Roll threshold exceeded")
+	    done = 1
+	if(abs(curr_euler_imu[1])>pitch_thres):
+	    rospy.logwarn("IMU Roll threshold exceeded")
+	    done = 1
+	if((((np.array(state.end_effector_z_pos))>=abs(state.robot_pose[0][2])).sum())>=(len(np.array(state.end_effector_z_pos)))-2):
+	    rospy.logwarn("4 or more limb end effector z positions are higher than the robot CoM z position")
+	    done = 1
+	if(~np.any(state.end_effector_z)):
+	    rospy.logwarn("All end effectors are not in contact with the ground")
+	    done = 1
+	    # !!!Uses 'hacky' ground contact threshold!!!
+	if(abs(state.robot_pose[0][2])>z_thres):
+	    rospy.logwarn("Robot CoM z position is higher/lower than permissible")
+	    done = 1
+	# or(state.joint_positions>=joint_angles_lim)
 	# Cannot threshold on height == 0 for limbs in the air/touching the ground because frame = world frame, so no comparison with ground
-	# Robot orientation||Joint angles||Height indicate collision, end episode
-	    done = 1
-	    premat = 1
-	    print("!!!Terminal Condition!!!")
-	elif(time >= terminal_time): # Time exceeded, end episode
-	    premat = 0
-	    done = 1
-	else:
-	    # Terminal conditions not met, do not end episode
-	    done = 0 
-	    premat = None
-	return done, premat	
-
-
+	# Robot orientation||Joint angles||End_effector_z wrt CoM body indicate collision, end episode 
+	return done	

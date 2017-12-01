@@ -19,12 +19,14 @@ bool check_hit_func(snake_monster::check_hit::Request  &req, snake_monster::chec
 	robot_model_loader::RobotModelLoader robot_model_loader("robot_description");
 	robot_model::RobotModelPtr kinematic_model = robot_model_loader.getModel();
 	ROS_INFO("Model frame: %s", kinematic_model->getModelFrame().c_str());
-
 	planning_scene::PlanningScene planning_scene(kinematic_model);
+	robot_state::RobotState copied_state = planning_scene.getCurrentState();
 
 
 	collision_detection::CollisionRequest collision_request;
 	collision_detection::CollisionResult collision_result;
+	collision_request.contacts = true;
+	collision_request.max_contacts = 1000;
 	collision_result.clear();
 	
 	planning_scene.checkSelfCollision(collision_request, collision_result);

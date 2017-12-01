@@ -49,7 +49,7 @@ leg_contact_threshold = 0.027
 state_dim = 185
 action_dimension = 18
 lol = 0
-model = 'cpg' #define model here
+model = 'ddpg' #define model here
 #Self collision detection function
 
 # Define Global Variables for logging:
@@ -335,6 +335,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         sampling_done = False
 	sample_count = -1
 	if model == 'cpg':
+	        #print("CPG_HERE!")
 	#only forward action is taken
 		while cnt <230:
         		cpg['direction']= cpg['forward']
@@ -414,27 +415,46 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 			self.pub['L'+'4'+'_'+'2'].publish(0)
 			self.pub['L'+'4'+'_'+'3'].publish(np.pi/6)
 			'''	
-		
+			'''		
 			self.pub['L'+'1'+'_'+'1'].publish(np.pi/2)
         		self.pub['L'+'1'+'_'+'2'].publish(np.pi/2)
         		self.pub['L'+'1'+'_'+'3'].publish(0)
 			self.pub['L'+'6'+'_'+'1'].publish(np.pi/3)
 			self.pub['L'+'6'+'_'+'2'].publish(0)
 			self.pub['L'+'6'+'_'+'3'].publish(0)
-			self.pub['L'+'2'+'_'+'1'].publish(0)
-			self.pub['L'+'2'+'_'+'2'].publish(0)
-			self.pub['L'+'2'+'_'+'3'].publish(0)
+			self.pub['L'+'2'+'_'+'1'].publish(-np.pi/4)
+			self.pub['L'+'2'+'_'+'2'].publish(np.pi/4)
+			self.pub['L'+'2'+'_'+'3'].publish(np.pi/4)
 			self.pub['L'+'5'+'_'+'1'].publish(-np.pi/3)
 			self.pub['L'+'5'+'_'+'2'].publish(0)
 			self.pub['L'+'5'+'_'+'3'].publish(0)
-			self.pub['L'+'3'+'_'+'1'].publish(0)
-			self.pub['L'+'3'+'_'+'2'].publish(0)
+			self.pub['L'+'3'+'_'+'1'].publish(np.pi/4)
+			self.pub['L'+'3'+'_'+'2'].publish(np.pi/4)
 			self.pub['L'+'3'+'_'+'3'].publish(0)
 			self.pub['L'+'4'+'_'+'1'].publish(0)
 			self.pub['L'+'4'+'_'+'2'].publish(0)
 			self.pub['L'+'4'+'_'+'3'].publish(0)
+			'''
+			self.pub['L'+'1'+'_'+'1'].publish(0)		
+        		self.pub['L'+'1'+'_'+'2'].publish(np.pi/2)
+        		self.pub['L'+'1'+'_'+'3'].publish(0)		
+			self.pub['L'+'6'+'_'+'1'].publish(0)
+			self.pub['L'+'6'+'_'+'2'].publish(0)
+			self.pub['L'+'6'+'_'+'3'].publish(0)      
+			self.pub['L'+'2'+'_'+'1'].publish(0)		
+			self.pub['L'+'2'+'_'+'2'].publish(0)
+			self.pub['L'+'2'+'_'+'3'].publish(0)      
+			self.pub['L'+'5'+'_'+'1'].publish(0)		
+			self.pub['L'+'5'+'_'+'2'].publish(0)
+			self.pub['L'+'5'+'_'+'3'].publish(0)      
+			self.pub['L'+'3'+'_'+'1'].publish(0)		
+			self.pub['L'+'3'+'_'+'2'].publish(0)
+			self.pub['L'+'3'+'_'+'3'].publish(0)      
+			self.pub['L'+'4'+'_'+'1'].publish(0)		
+			self.pub['L'+'4'+'_'+'2'].publish(0)
+			self.pub['L'+'4'+'_'+'3'].publish(0)		
+                                                  
 			
-
 			#if lol == 0 : 
 			#	self.pub['L'+'4'+'_'+'3'].publish(0)
 			#	lol = 1
@@ -500,7 +520,9 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 		
 	done = 0
 	term_condition = self.term_cond(current_state)
-	
+	#print("-----------------z------------------")
+	#print(current_state.robot_pose[0][2])
+	#print("-----------------z------------------")
 	done = term_condition
 	#pdb.set_trace()	
 	# Use term_conditions[1] to check if timeout or collision
@@ -591,7 +613,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
     def term_cond(self,state):
 	roll_thres = float(np.pi/6) # Hard-coded using observed values
 	pitch_thres = float(np.pi/6) # Hard-coded using observed values
-	z_thres = 0.1 # Hard-coded using observed values
+	z_thres = 0.11985 # Hard-coded using observed values -- maximum height of the robot CoM when all angles are set to zero and the robot is made to stand
 	#z_tol = 4.65*0.000001 # Hard-coded
 	done = 0 # Set done -> incomplete as default
 	q1 = np.array(state.robot_pose[1])

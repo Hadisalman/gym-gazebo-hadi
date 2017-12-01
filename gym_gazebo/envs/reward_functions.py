@@ -12,19 +12,34 @@ class reward_function:
         #self.goal_state = goal_state
         #self.start_state = start_state
 
-	self.w_slip         = 10
-	self.w_control      = 10
-	self.w_collision    = 10
-	self.w_energy       = 10	
-	self.w_contact      = 10
-	self.w_movement     = 10
-	self.w_acceleration = 10
+	self.w_slip         = 0
+	self.w_control      = 0
+	self.w_collision    = 0
+	self.w_energy       = 0	
+	self.w_contact      = 0
+	self.w_movement     = 1
+	self.w_acceleration = 0
 	###Weights to each function
 
     #State is arranged as:
     #Joint angles(18), Joint velocities(18), Joint Torques(),  Force-feedback(), IMU pose(3DOF +  4quat), bot pose(7)
     #current_state
     #previous_state
+    def forward_movement(self):
+	
+        pos1 = self.previous_state.robot_pose[0]
+	pos1.extend(self.previous_state.robot_pose[1])
+	pos1 = np.asarray(pos1)
+        pos2 = self.current_state.robot_pose[0]
+	pos2.extend(self.current_state.robot_pose[1]) 
+	pos2 = np.asarray(pos2)
+	v = pos2 - pos1
+	theta = np.arctan2(v[2],v[1])
+	if theta >  0 :
+	    return -1
+	else:
+	    return 1
+
     def forward_acceleration(self):
 
 	#This threshold has to be decided!

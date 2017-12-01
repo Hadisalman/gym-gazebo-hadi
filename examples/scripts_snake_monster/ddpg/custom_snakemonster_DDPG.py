@@ -362,14 +362,14 @@ def train(sess, env, args, actor, critic, actor_noise):
 
                 summary_str = sess.run(summary_ops, feed_dict={
                     summary_vars[0]: ep_reward,
-                    summary_vars[1]: ep_ave_max_q / float(j)
+                    summary_vars[1]: ep_ave_max_q / float(j+1)
                 })
 
                 writer.add_summary(summary_str, i)
                 writer.flush()
 
                 print('| Reward: {:d} | Episode: {:d} | Qmax: {:.4f}'.format(int(ep_reward), \
-                        i, (ep_ave_max_q / float(j))))
+                        i, (ep_ave_max_q / float(j+1))))
                 #if hasattr(env, 'monitor'):
 		#    if hasattr(env.monitor, 'stats_recorder'):
 		env.stats_recorder.done = True

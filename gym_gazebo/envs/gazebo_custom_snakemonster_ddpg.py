@@ -81,7 +81,7 @@ class robot_state:
     robot_pose = np.asarray([0, 0, 0, 0, 0, 0, 1]) #3 Trans vector and 4 quat variables!
     end_effector_z = np.zeros(no_legs) 
     end_effector_angles = np.zeros(no_legs*3) 
-    
+    end_effector_z_pos = np.zeros(no_legs)
     #Call back definition for the IMU on the robot 10 vals 
     def imu(self, imu_data):
         self.imu_state = np.asarray([imu_data.orientation.x, imu_data.orientation.y, imu_data.orientation.z, imu_data.orientation.w, imu_data.angular_velocity.x, imu_data.angular_velocity.y, imu_data.angular_velocity.z, imu_data.linear_acceleration.x, imu_data.linear_acceleration.y, imu_data.linear_acceleration.z]) 
@@ -127,6 +127,8 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         #self.action_space = spaces.Discrete(3) #F,L,R
         self.reward_range = (-np.inf, np.inf)
         
+
+    	self.listener = tf.TransformListener(rospy.Time(secs=0,nsecs=1000000))
 	#Change Here!!!
 	self.start_config = np.array([ 0.0138044 ,  0.66815109, -0.09172022,  0.0018129 ,  0.66900793,
        -0.09310078, -0.01668483,  0.66715504, -0.09001435,  0.01539358,
@@ -180,7 +182,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	flag = False
 	
 
-    	listener = tf.TransformListener()
+    	listener = self.listener
 	#if reset_flag:
 		#listener.clear()
     	rate = rospy.Rate(100.0)
@@ -220,12 +222,12 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
                     joint_no = joint_no -1 #Retry to get the value
                     pass
         #State of each foot!    
-
         for limb in range(no_legs):
             try:
                 (trans,rot)  = listener.lookupTransform('map', 'foot__leg' + str(limb+1) + '__INPUT_INTERFACE', rospy.Time(0))
                 current_data.end_effector_z[limb] = (trans[2] <  leg_contact_threshold)*1
-                quaternion = (
+                current_data.end_effector_z_pos[limb] = trans[2]
+		quaternion = (
                     rot[0],
                     rot[1],
                     rot[2],
@@ -370,6 +372,8 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 		start = int(round(time.time() * 1000))  	
  		while abs(int(round(time.time() * 1000)) - start)< 500:       	
 			
+
+			
 	      		self.pub['L'+'1'+'_'+'1'].publish(action[0])
         		self.pub['L'+'1'+'_'+'2'].publish(action[1])
         		self.pub['L'+'1'+'_'+'3'].publish(action[2])
@@ -388,7 +392,29 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 			self.pub['L'+'4'+'_'+'1'].publish(action[15])
 			self.pub['L'+'4'+'_'+'2'].publish(action[16])
 			self.pub['L'+'4'+'_'+'3'].publish(action[17])
-		'''	
+			
+				
+			'''
+			self.pub['L'+'1'+'_'+'1'].publish(np.pi/2)
+        		self.pub['L'+'1'+'_'+'2'].publish(np.pi/2)
+        		self.pub['L'+'1'+'_'+'3'].publish(np.pi/2)
+			self.pub['L'+'6'+'_'+'1'].publish(0)
+			self.pub['L'+'6'+'_'+'2'].publish(0)
+			self.pub['L'+'6'+'_'+'3'].publish(np.pi/6)
+			self.pub['L'+'2'+'_'+'1'].publish(np.pi/2)
+			self.pub['L'+'2'+'_'+'2'].publish(np.pi/2)
+			self.pub['L'+'2'+'_'+'3'].publish(np.pi/2)
+			self.pub['L'+'5'+'_'+'1'].publish(0)
+			self.pub['L'+'5'+'_'+'2'].publish(0)
+			self.pub['L'+'5'+'_'+'3'].publish(np.pi/6)
+			self.pub['L'+'3'+'_'+'1'].publish(np.pi/2)
+			self.pub['L'+'3'+'_'+'2'].publish(np.pi/2)
+			self.pub['L'+'3'+'_'+'3'].publish(np.pi/2)
+			self.pub['L'+'4'+'_'+'1'].publish(0)
+			self.pub['L'+'4'+'_'+'2'].publish(0)
+			self.pub['L'+'4'+'_'+'3'].publish(np.pi/6)
+				
+		
 			self.pub['L'+'1'+'_'+'1'].publish(np.pi/2)
         		self.pub['L'+'1'+'_'+'2'].publish(np.pi/2)
         		self.pub['L'+'1'+'_'+'3'].publish(np.pi/2)
@@ -407,6 +433,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 			self.pub['L'+'4'+'_'+'1'].publish(np.pi/2)
 			self.pub['L'+'4'+'_'+'2'].publish(np.pi/2)
 			self.pub['L'+'4'+'_'+'3'].publish(np.pi/2)
+			'''
 
 			#if lol == 0 : 
 			#	self.pub['L'+'4'+'_'+'3'].publish(0)
@@ -415,7 +442,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 			#	self.pub['L'+'4'+'_'+'3'].publish(np.pi/2)
 			#	lol = 0
 
-		'''
+	
         data = None
         #current_data = robot_state()
    	#Collision check
@@ -423,16 +450,16 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
    
 	current_state = self.get_state(False)
         rospy.wait_for_service('/gazebo/pause_physics')
-	
-	'''	
+	'''
+		
 	global state_sample_done
 	global sample_count
 	global state_sample_cnt
 	global log_imu_state
 	global log_joint_torque
 	global log_robot_pose
-
-	if state_sample_done == False and sample_count<30:
+	
+	if state_sample_done == False and sample_count<100:
 		state_sample_cnt += 1
 		q1 = np.array(current_state.robot_pose[1])
 		euler_pose = np.array(tf.transformations.euler_from_quaternion(q1))
@@ -440,20 +467,21 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 		euler_imu = np.array(tf.transformations.euler_from_quaternion(q2))
 		log_imu_state[state_sample_cnt-1,:3] = euler_imu[:]
 		log_imu_state[state_sample_cnt-1,3:] = current_state.imu_state[4:]
-		#pdb.set_trace()
+	
 		log_joint_torque[state_sample_cnt-1][:] = current_state.joint_torque[:]
 		log_robot_pose[state_sample_cnt-1,:3] = current_state.robot_pose[0]
-		#pdb.set_trace()
+	
 		log_robot_pose[state_sample_cnt-1,3:] = euler_pose
-		#pdb.set_trace()
-		if(state_sample_cnt == 30):
+		
+		if(state_sample_cnt == 100):
 			np.savetxt('imu_state_ddpg.csv',log_imu_state,delimiter=",")
 			np.savetxt('joint_torques_ddpg.csv',log_joint_torque,delimiter=",")
-			np.savetxt('robot_pose_ddpg.csv',log_robot_pose,delimiter=",")
+			np.savetxt('robot_pose_analysis_ddpg.csv',log_robot_pose,delimiter=",")
 			state_sample_done = True
 			print("------------CSVs saved!---------------")
 
-'''
+	'''
+
 	try:
             #resp_pause = pause.call()
             self.pause()
@@ -474,8 +502,8 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	t1 = 1200 # Episode start time - current time
 	term_conditions = self.term_cond(current_state,t1)
 	
-	#done = term_conditions[0]
-	
+	done = term_conditions[0]
+	#pdb.set_trace()	
 	# Use term_conditions[1] to check if timeout or collision
 	serialized_state  = current_state.serialized_state()
         #return current_state, reward, done
@@ -487,10 +515,18 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	#global reset_flag
 	#reset_flag = True
         # Resets the state of the environment and returns an initial observation.
-        '''
+        
+	rospy.wait_for_service('/gazebo/reset_world')
+        try:
+           # reset_proxy.call()   
+            rospy.ServiceProxy('/gazebo/reset_world', Empty)
+        except rospy.ServiceException, e:
+            print ("/gazebo/reset_simulation service call failed")
+	#self.listener.clear()
+	'''
 	rospy.wait_for_service('/gazebo/reset_simulation')
         try:
-            #reset_proxy.call()
+           # reset_proxy.call()
             self.reset_proxy()
         except rospy.ServiceException, e:
             print ("/gazebo/reset_simulation service call failed")
@@ -503,7 +539,8 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         except rospy.ServiceException, e:
             print ("/gazebo/unpause_physics service call failed")
 	
-	
+	#self.listener.clear()	
+	'''
         self.pub['L'+'1'+'_'+'1'].publish(self.start_config[0])
         self.pub['L'+'1'+'_'+'2'].publish(self.start_config[1])
         self.pub['L'+'1'+'_'+'3'].publish(self.start_config[2])
@@ -522,9 +559,10 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	self.pub['L'+'4'+'_'+'1'].publish(self.start_config[15])
 	self.pub['L'+'4'+'_'+'2'].publish(self.start_config[16])
         self.pub['L'+'4'+'_'+'3'].publish(self.start_config[17])
-       
+       '''
 	 
 	
+#	self.listener.clear()
 	current_state = self.get_state(True) 
 	rospy.wait_for_service('/gazebo/pause_physics')
         try:
@@ -555,7 +593,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	roll_thres = float(3.1415/6) # Hard-coded using observed values
 	pitch_thres = float(3.1415/6) # Hard-coded using observed values
 	z_thres = 0.1 # Hard-coded using observed values
-	z_tol = 4.65*0.000001 # Hard-coded
+	#z_tol = 4.65*0.000001 # Hard-coded
 	terminal_time = 1800 # Milliseconds, CURRENTLY ARBITRARY!
 	premat = 1 # Set premature end -> true as default
 	done = 0 # Set done -> incomplete as default
@@ -565,11 +603,13 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	curr_euler_imu = np.array(tf.transformations.euler_from_quaternion(q2))
 	
 	#pdb.set_trace() 
-	if((abs(curr_euler_pose[0])>roll_thres)or(abs(curr_euler_pose[1])>pitch_thres)or(abs(curr_euler_imu[0])>roll_thres)or(abs(state.robot_pose[0][2])<=z_tol)or(abs(state.robot_pose[0][2])>z_thres)): 
+	if((abs(curr_euler_pose[0])>roll_thres)or(abs(curr_euler_pose[1])>pitch_thres)or(abs(curr_euler_imu[0])>roll_thres)or(~np.any(state.end_effector_z))or(abs(state.robot_pose[0][2])>z_thres)): 
 	# or(state.joint_positions>=joint_angles_lim)or(abs(curr_euler_imu[1])>pitch_thres)
+	# Cannot threshold on height == 0 for limbs in the air/touching the ground because frame = world frame, so no comparison with ground
 	# Robot orientation||Joint angles||Height indicate collision, end episode
 	    done = 1
 	    premat = 1
+	    print("!!!Terminal Condition!!!")
 	elif(time >= terminal_time): # Time exceeded, end episode
 	    premat = 0
 	    done = 1

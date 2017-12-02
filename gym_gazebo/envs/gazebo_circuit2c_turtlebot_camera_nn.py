@@ -153,16 +153,24 @@ class GazeboCircuit2cTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         center_detour = abs(right_sum - left_sum)/5
 
         # 3 actions
+        # if not done:
+        #     if action == 0:
+        #         reward = 10 / float(center_detour+1)
+        #     elif action_sum > 45: #L or R looping
+        #         reward = -0.5
+        #     else: #L or R no looping
+        #         reward = 5 / float(center_detour+1)
+        # else:
+        #     # reward = -1
+        #     reward = -50
+
         if not done:
             if action == 0:
-                reward = 10 / float(center_detour+1)
-            elif action_sum > 45: #L or R looping
-                reward = -0.5
-            else: #L or R no looping
-                reward = 5 / float(center_detour+1)
+                reward = 5
+            else:
+                reward = 1
         else:
-            # reward = -1
-            reward = -50
+            reward = -200
 
         #print("detour= "+str(center_detour)+" :: reward= "+str(reward)+" ::action="+str(action))
 

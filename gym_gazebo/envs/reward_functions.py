@@ -19,6 +19,8 @@ class reward_function:
 	self.w_contact      = 0
 	self.w_movement     = 1
 	self.w_acceleration = 0
+	self.alpha = 10
+	self.gamma = 20
 	###Weights to each function
 
     #State is arranged as:
@@ -27,14 +29,13 @@ class reward_function:
     #previous_state
     def forward_movement(self):
 	
-        pos1 = self.previous_state.robot_pose[0]
-	pos1.extend(self.previous_state.robot_pose[1])
-	pos1 = np.asarray(pos1)
-        pos2 = self.current_state.robot_pose[0]
-	pos2.extend(self.current_state.robot_pose[1]) 
-	pos2 = np.asarray(pos2)
+        pos1 = np.array([self.previous_state.robot_pose[0][0],self.previous_state.robot_pose[0][1]])
+	
+        pos2 = np.array([self.current_state.robot_pose[0][0],self.current_state.robot_pose[0][1]])
 	v = pos2 - pos1
-	theta = np.arctan2(v[2],v[1])
+	theta = np.arctan2(v[1],v[0])
+	#import pdb
+	#pdb.set_trace()
 	if theta >  0 :
 	    return -1
 	else:
@@ -58,11 +59,10 @@ class reward_function:
     #Not sure why I added this :p
     def any_movement(self):
         pos1 = self.previous_state.robot_pose[0]
-	pos1.extend(self.previous_state.robot_pose[1])
-	pos1 = np.asarray(pos1)
-        pos2 = self.current_state.robot_pose[0]
-	pos2.extend(self.current_state.robot_pose[1]) 
-	pos2 = np.asarray(pos2)
+        pos1 = np.array([self.previous_state.robot_pose[0][0],self.previous_state.robot_pose[0][1]])
+	
+        pos2 = np.array([self.current_state.robot_pose[0][0],self.current_state.robot_pose[0][1]])
+	#v = pos2 - pos1
 	disp = np.sqrt(np.sum(np.square(pos2 - pos1)))
 	return self.w_movement*disp
          
@@ -76,6 +76,8 @@ class reward_function:
 
     #Periodicity model, trying to force similar energy through time
     def conservation_of_energy(self):
+	#import pdb
+	#pdb.set_trace()
 	current_pose  = self.current_state.robot_pose[0]
 	current_pose.extend(self.current_state.robot_pose[1])
 	
@@ -110,12 +112,13 @@ class reward_function:
         
     #To have minimum energy added to the system
     def control_input(self):
-        #The action should be the difference in the state joint angles? Or just the torques 
-        input_energy = np.sum(np.square(self.current_state.joint_torque))
-	if input_energy <= 0: # I think we should define a tolerence here maybe ?
-		input_energy = 0.01
-	return input_energy
-
+	#import pdb
+	#pdb.set_trace()
+	prev_joint_positions = cp.deepcopy(self.previous_state.joint_positions)
+	current_joint_positions = cp.deepcopy(self.current_state.joint_positions)
+	u = np.sqrt(np.sum(np.square(current_joint_positions - prev_joint_positions)))
+	
+	return u
     #Add reward for being normal to the surface
     def slip_avoidance(self):
 	angles = self.current_state.end_effector_angles
@@ -133,4 +136,5 @@ class reward_function:
 	return total_error
 
     def total_reward(self):
-	return (self.w_slip)/self.slip_avoidance() + self.w_control/self.control_input() + self.w_collision/self.self_collision() + self.w_energy/self.conservation_of_energy() + self.w_contact*self.ground_contact() + self.w_movement*self.any_movement() + self.w_acceleration*self.forward_acceleration()
+	return (self.alpha*self.forward_movement()*self.any_movement() - self.gamma*self.control_input())
+	#return (self.w_slip)/self.slip_avoidance() + self.w_control/self.control_input() + self.w_collision/self.self_collision() + self.w_energy/self.conservation_of_energy() + self.w_contact*self.ground_contact() + self.w_movement*self.any_movement() + self.w_acceleration*self.forward_acceleration()

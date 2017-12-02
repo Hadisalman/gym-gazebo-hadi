@@ -315,7 +315,6 @@ def train(sess, env, args, actor, critic, actor_noise):
             #a = actor.predict(np.reshape(s, (1, 3))) + (1. / (1. + i))
             # Execute the action and get feedback
             a = actor.predict(np.reshape(s, (1, actor.s_dim))) + actor_noise()
-	    print a, "Check this value"
 	    #a = [1] ##HArdcode alert!!!!!	
             s2, r, terminal, info = env.step(a[0])
 	    #s2  = s_class.serialized_state()

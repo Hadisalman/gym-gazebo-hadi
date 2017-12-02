@@ -5,6 +5,7 @@ import time
 import numpy as np
 import math
 import pdb
+import copy as cp
 
 from gym import utils, spaces
 from gym_gazebo.envs import gazebo_env
@@ -70,6 +71,17 @@ def is_self_collision():
     except rospy.ServiceException, e:
         print "Service call failed: %s"%e
 
+class shadow_state():
+    #The following are the states that we check for a particular time!
+    def __init__(self,previous_state):
+   	 self.imu_state = cp.deepcopy(previous_state.imu_state)
+   	 self.joint_torque = cp.deepcopy(previous_state.joint_torque)
+   	 self.joint_positions = cp.deepcopy(previous_state.joint_positions)
+   	 self.joint_velocities = cp.deepcopy(previous_state.joint_velocities)
+   	 self.robot_pose = cp.deepcopy(previous_state.robot_pose)
+   	 self.end_effector_z = cp.deepcopy(previous_state.end_effector_z) 
+   	 self.end_effector_angles = cp.deepcopy(previous_state.end_effector_angles) 
+   	 self.end_effector_z_pos = cp.deepcopy(previous_state.end_effector_z_pos)
 
 
 class robot_state:
@@ -88,9 +100,12 @@ class robot_state:
 
     #Joint states callback functions    18 + 18 = 36 vals
     def joint_state(self, state_data, joint_number):
-        self.joint_positions[joint_number-1] = np.asarray([state_data.process_value])
-        self.joint_velocities[joint_number-1] = np.asarray([state_data.process_value_dot])
+	#state_data_temp = cp.deepcopy(state_data)
+	jp = cp.deepcopy(state_data.process_value)
+        self.joint_positions[joint_number-1] = np.asarray([jp])
+        self.joint_velocities[joint_number-1] = np.asarray([state_data_temp.process_value_dot])
 
+        #return np.asarray([jp]),np.asarray([state_data.process_value_dot])
     #Hard code alert! Hardcoded the array indexes. 
     #The next set of functions are the call back functions that set the joint torques. THe torque sensing has 6 outputs in 3 force directions and 3 torque directions. The state will be one array of all the states, let them be updates as convenient. Felt no need to put locks here. It shouldn't affect the calculations much 
 
@@ -167,6 +182,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	self.reward_pub['movement_reward'] = rospy.Publisher('/snake_monster/reward/movement_reward',Float64, queue_size=10)
 	self.reward_pub['acceleration_reward'] = rospy.Publisher('/snake_monster/reward/acceleration_reward',Float64,queue_size=10)		
 	self.reward_pub['forward_movement_reward'] = rospy.Publisher('/snake_monster/reward/forward_movement_reward',Float64,queue_size=10)	
+	self.reward_pub['total_reward'] = rospy.Publisher('/snake_monster/reward/total_reward',Float64,queue_size=10)	
         self._seed()
 
     def _seed(self, seed=None):
@@ -215,8 +231,9 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
                 #print limb, joint_no
                 try:
                     joint_data = rospy.wait_for_message("/snake_monster/L" + str(limb+1) + "_" + str(joint_no+1) + "_eff_pos_controller/state", JointControllerState, 0.1 )
-                    
-                    current_data.joint_state(joint_data, limb*3 + joint_no + 1)
+		    
+                    joint_data_temp = cp.deepcopy(joint_data)
+                    current_data.joint_state(joint_data_temp, limb*3 + joint_no + 1)
                     
                 except:
                     joint_no = joint_no -1 #Retry to get the value
@@ -252,16 +269,15 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
                 pass
 	done = 0
-	self.previous_state = current_data;
-	return current_data
-
+	#self.previous_state = current_data;
+	#return current_data
+	self.current_state = current_data
 
 
 
 
     def _step(self, action):
-	print "in step"	
-	previous_state = self.previous_state 
+	#previous_state = cp.deepcopy(self.previous_state) 
 
         cmd = tools.CommandStruct()
         T = 600
@@ -371,10 +387,9 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 			
 	elif model == 'ddpg' :
 		start = int(round(time.time() * 1000))  	
- 		while abs(int(round(time.time() * 1000)) - start)< 500:       	
+ 		while abs(int(round(time.time() * 1000)) - start)< 1000:       	
 			
 
-			'''	
 	      		self.pub['L'+'1'+'_'+'1'].publish(action[0])
         		self.pub['L'+'1'+'_'+'2'].publish(action[1])
         		self.pub['L'+'1'+'_'+'3'].publish(action[2])
@@ -393,82 +408,13 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 			self.pub['L'+'4'+'_'+'1'].publish(action[15])
 			self.pub['L'+'4'+'_'+'2'].publish(action[16])
 			self.pub['L'+'4'+'_'+'3'].publish(action[17])
-			'''
 				
-			'''
-			self.pub['L'+'1'+'_'+'1'].publish(np.pi/2)
-        		self.pub['L'+'1'+'_'+'2'].publish(np.pi/2)
-        		self.pub['L'+'1'+'_'+'3'].publish(np.pi/2)
-			self.pub['L'+'6'+'_'+'1'].publish(0)
-			self.pub['L'+'6'+'_'+'2'].publish(0)
-			self.pub['L'+'6'+'_'+'3'].publish(np.pi/6)
-			self.pub['L'+'2'+'_'+'1'].publish(np.pi/2)
-			self.pub['L'+'2'+'_'+'2'].publish(np.pi/2)
-			self.pub['L'+'2'+'_'+'3'].publish(np.pi/2)
-			self.pub['L'+'5'+'_'+'1'].publish(0)
-			self.pub['L'+'5'+'_'+'2'].publish(0)
-			self.pub['L'+'5'+'_'+'3'].publish(np.pi/6)
-			self.pub['L'+'3'+'_'+'1'].publish(np.pi/2)
-			self.pub['L'+'3'+'_'+'2'].publish(np.pi/2)
-			self.pub['L'+'3'+'_'+'3'].publish(np.pi/2)
-			self.pub['L'+'4'+'_'+'1'].publish(0)
-			self.pub['L'+'4'+'_'+'2'].publish(0)
-			self.pub['L'+'4'+'_'+'3'].publish(np.pi/6)
-			'''	
-			'''		
-			self.pub['L'+'1'+'_'+'1'].publish(np.pi/2)
-        		self.pub['L'+'1'+'_'+'2'].publish(np.pi/2)
-        		self.pub['L'+'1'+'_'+'3'].publish(0)
-			self.pub['L'+'6'+'_'+'1'].publish(np.pi/3)
-			self.pub['L'+'6'+'_'+'2'].publish(0)
-			self.pub['L'+'6'+'_'+'3'].publish(0)
-			self.pub['L'+'2'+'_'+'1'].publish(-np.pi/4)
-			self.pub['L'+'2'+'_'+'2'].publish(np.pi/4)
-			self.pub['L'+'2'+'_'+'3'].publish(np.pi/4)
-			self.pub['L'+'5'+'_'+'1'].publish(-np.pi/3)
-			self.pub['L'+'5'+'_'+'2'].publish(0)
-			self.pub['L'+'5'+'_'+'3'].publish(0)
-			self.pub['L'+'3'+'_'+'1'].publish(np.pi/4)
-			self.pub['L'+'3'+'_'+'2'].publish(np.pi/4)
-			self.pub['L'+'3'+'_'+'3'].publish(0)
-			self.pub['L'+'4'+'_'+'1'].publish(0)
-			self.pub['L'+'4'+'_'+'2'].publish(0)
-			self.pub['L'+'4'+'_'+'3'].publish(0)
-			'''
-			self.pub['L'+'1'+'_'+'1'].publish(0)		
-        		self.pub['L'+'1'+'_'+'2'].publish(np.pi/2)
-        		self.pub['L'+'1'+'_'+'3'].publish(0)		
-			self.pub['L'+'6'+'_'+'1'].publish(0)
-			self.pub['L'+'6'+'_'+'2'].publish(0)
-			self.pub['L'+'6'+'_'+'3'].publish(0)      
-			self.pub['L'+'2'+'_'+'1'].publish(0)		
-			self.pub['L'+'2'+'_'+'2'].publish(0)
-			self.pub['L'+'2'+'_'+'3'].publish(0)      
-			self.pub['L'+'5'+'_'+'1'].publish(0)		
-			self.pub['L'+'5'+'_'+'2'].publish(0)
-			self.pub['L'+'5'+'_'+'3'].publish(0)      
-			self.pub['L'+'3'+'_'+'1'].publish(0)		
-			self.pub['L'+'3'+'_'+'2'].publish(0)
-			self.pub['L'+'3'+'_'+'3'].publish(0)      
-			self.pub['L'+'4'+'_'+'1'].publish(0)		
-			self.pub['L'+'4'+'_'+'2'].publish(0)
-			self.pub['L'+'4'+'_'+'3'].publish(0)		
-                                                  
 			
-			#if lol == 0 : 
-			#	self.pub['L'+'4'+'_'+'3'].publish(0)
-			#	lol = 1
-			#else:
-			#	self.pub['L'+'4'+'_'+'3'].publish(np.pi/2)
-			#	lol = 0
-
 	
         data = None
-        #current_data = robot_state()
-   	#Collision check
-   	#print is_self_collision(), "Collision check is"
-  	is_self_collision() 
-	current_state = self.get_state(False)
+  	#is_self_collision()
+	prev_shadow_state = shadow_state(self.previous_state) 
+	self.get_state(False)
         rospy.wait_for_service('/gazebo/pause_physics')
 	'''
 		
@@ -510,25 +456,27 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 
 
 	#if(self.start != 1):
-	reward_object = reward_function(previous_state, current_state)	
+	
+	reward_object = reward_function(prev_shadow_state,self. current_state)	
+	self.previous_state = cp.deepcopy(self.current_state)
 	reward = reward_object.total_reward()
 	self.publish_reward(reward_object) # publishes the reward function individual values
-	
 	#else:
 	#	self.start = 0	
 	#	reward = 1
 		
 	done = 0
-	term_condition = self.term_cond(current_state)
+	term_condition = self.term_cond(self.current_state)
 	#print("-----------------z------------------")
 	#print(current_state.robot_pose[0][2])
 	#print("-----------------z------------------")
 	done = term_condition
+	if done == 1:
+		reward = -100
 	#pdb.set_trace()	
 	# Use term_conditions[1] to check if timeout or collision
-	serialized_state  = current_state.serialized_state()
+	serialized_state  = self.current_state.serialized_state()
         #return current_state, reward, done
-	print "Returning from step"
 	return serialized_state, reward, done, {}
 
     def _reset(self):
@@ -560,31 +508,10 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         except rospy.ServiceException, e:
             print ("/gazebo/unpause_physics service call failed")
 	
-	#self.listener.clear()	
-	'''
-        self.pub['L'+'1'+'_'+'1'].publish(self.start_config[0])
-        self.pub['L'+'1'+'_'+'2'].publish(self.start_config[1])
-        self.pub['L'+'1'+'_'+'3'].publish(self.start_config[2])
-	self.pub['L'+'6'+'_'+'1'].publish(self.start_config[3])
-	self.pub['L'+'6'+'_'+'2'].publish(self.start_config[4])
-	self.pub['L'+'6'+'_'+'3'].publish(self.start_config[5])
-	self.pub['L'+'2'+'_'+'1'].publish(self.start_config[6])
-	self.pub['L'+'2'+'_'+'2'].publish(self.start_config[7])
-	self.pub['L'+'2'+'_'+'3'].publish(self.start_config[8])
-	self.pub['L'+'5'+'_'+'1'].publish(self.start_config[9])
-	self.pub['L'+'5'+'_'+'2'].publish(self.start_config[10])
-	self.pub['L'+'5'+'_'+'3'].publish(self.start_config[11])
-	self.pub['L'+'3'+'_'+'1'].publish(self.start_config[12])
-	self.pub['L'+'3'+'_'+'2'].publish(self.start_config[13])
-	self.pub['L'+'3'+'_'+'3'].publish(self.start_config[14])
-	self.pub['L'+'4'+'_'+'1'].publish(self.start_config[15])
-	self.pub['L'+'4'+'_'+'2'].publish(self.start_config[16])
-        self.pub['L'+'4'+'_'+'3'].publish(self.start_config[17])
-       '''
 	 
 	
-#	self.listener.clear()
-	current_state = self.get_state(True) 
+	#current_state = self.get_state(True) 
+	self.get_state(True) 
 	rospy.wait_for_service('/gazebo/pause_physics')
         try:
             #resp_pause = pause.call()
@@ -592,10 +519,8 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         except rospy.ServiceException, e:
             print ("/gazebo/pause_physics service call failed")
 
-	#listener = tf.TransformListener()
-	#listener.clear()
-	#current_state = self.get_state(True) 
-	serialized_state  = current_state.serialized_state()
+	self.previous_state = cp.deepcopy(self.current_state) 
+	serialized_state  = self.current_state.serialized_state()
         
 	return serialized_state
 
@@ -609,6 +534,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	self.reward_pub['movement_reward'].publish(reward_object.any_movement())
 	self.reward_pub['acceleration_reward'].publish(reward_object.forward_acceleration())
 	self.reward_pub['forward_movement_reward'].publish(reward_object.forward_movement())
+	self.reward_pub['total_reward'].publish(reward_object.total_reward())
 
     def term_cond(self,state):
 	roll_thres = float(np.pi/6) # Hard-coded using observed values

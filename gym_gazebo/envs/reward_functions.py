@@ -1,6 +1,7 @@
 ##Author Saurabh Nair; snnair@andrew.cmu.edu
 import numpy as np
 import copy as cp
+import tf 
 
 class reward_function:
   
@@ -20,13 +21,34 @@ class reward_function:
 	self.w_movement     = 1
 	self.w_acceleration = 0
 	self.alpha = 10
-	self.gamma = 20
+	self.gamma = 1
 	###Weights to each function
 
     #State is arranged as:
     #Joint angles(18), Joint velocities(18), Joint Torques(),  Force-feedback(), IMU pose(3DOF +  4quat), bot pose(7)
     #current_state
     #previous_state
+    def get_movement_direction(self):
+	#import pdb
+	#pdb.set_trace()
+	trans1 =  self.previous_state.robot_pose[0][:3]
+	trans1_mat = tf.transformations.translation_matrix(trans1)
+	rot1 = self.previous_state.robot_pose[0][3:]
+	rot1_mat   = tf.transformations.quaternion_matrix(rot1)
+	mat1 = np.dot(trans1_mat, rot1_mat)
+	
+	trans2 =  self.current_state.robot_pose[0][:3]
+	trans2_mat = tf.transformations.translation_matrix(trans2)
+	rot2 = self.current_state.robot_pose[0][3:]
+	rot2_mat   = tf.transformations.quaternion_matrix(rot2)
+	mat2 = np.dot(trans2_mat, rot2_mat)
+	
+	mat3 = np.linalg.inv(np.dot(np.linalg.inv(mat1),mat2))
+	trans3 = tf.transformations.translation_from_matrix(mat3)
+	rot3 = tf.transformations.quaternion_from_matrix(mat3)
+	return trans3
+	#print trans3
+	
     def forward_movement(self):
 	
         pos1 = np.array([self.previous_state.robot_pose[0][0],self.previous_state.robot_pose[0][1]])
@@ -136,5 +158,6 @@ class reward_function:
 	return total_error
 
     def total_reward(self):
-	return (self.alpha*self.forward_movement()*self.any_movement() - self.gamma*self.control_input())
+	trans = self.get_movement_direction()
+	return (self.alpha*trans[1] - self.gamma*self.control_input())
 	#return (self.w_slip)/self.slip_avoidance() + self.w_control/self.control_input() + self.w_collision/self.self_collision() + self.w_energy/self.conservation_of_energy() + self.w_contact*self.ground_contact() + self.w_movement*self.any_movement() + self.w_acceleration*self.forward_acceleration()

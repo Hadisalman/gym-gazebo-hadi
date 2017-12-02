@@ -183,7 +183,9 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	self.reward_pub['acceleration_reward'] = rospy.Publisher('/snake_monster/reward/acceleration_reward',Float64,queue_size=10)		
 	self.reward_pub['forward_movement_reward'] = rospy.Publisher('/snake_monster/reward/forward_movement_reward',Float64,queue_size=10)	
 	self.reward_pub['total_reward'] = rospy.Publisher('/snake_monster/reward/total_reward',Float64,queue_size=10)	
-        self._seed()
+	#self.reward_pub['movement_direction'] = rospy.Publisher('/snake_monster/reward/movement_direction',Float64,queue_size=10)	
+        
+	self._seed()
 
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -465,14 +467,14 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	#	self.start = 0	
 	#	reward = 1
 		
-	done = 0
-	term_condition = self.term_cond(self.current_state)
+	
+	done,penalty = self.term_cond(self.current_state)
 	#print("-----------------z------------------")
 	#print(current_state.robot_pose[0][2])
 	#print("-----------------z------------------")
-	done = term_condition
+	
 	if done == 1:
-		reward = -100
+		reward = penalty
 	#pdb.set_trace()	
 	# Use term_conditions[1] to check if timeout or collision
 	serialized_state  = self.current_state.serialized_state()
@@ -534,6 +536,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	self.reward_pub['movement_reward'].publish(reward_object.any_movement())
 	self.reward_pub['acceleration_reward'].publish(reward_object.forward_acceleration())
 	self.reward_pub['forward_movement_reward'].publish(reward_object.forward_movement())
+	#self.reward_pub['movement_direction'].publish(reward_object.get_movement_direction())
 	self.reward_pub['total_reward'].publish(reward_object.total_reward())
 
     def term_cond(self,state):
@@ -541,7 +544,8 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	pitch_thres = float(np.pi/6) # Hard-coded using observed values
 	z_thres = 0.11985 # Hard-coded using observed values -- maximum height of the robot CoM when all angles are set to zero and the robot is made to stand
 	#z_tol = 4.65*0.000001 # Hard-coded
-	done = 0 # Set done -> incomplete as default
+	done = 0 # Set done -> incomplete as defaul
+	penalty = 0
 	q1 = np.array(state.robot_pose[1])
 	curr_euler_pose = np.array(tf.transformations.euler_from_quaternion(q1))
 	q2 = state.imu_state[0:4]	
@@ -551,26 +555,34 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	if(abs(curr_euler_pose[0])>roll_thres):
 	    rospy.logwarn("Robot Pose Roll threshold exceeded")
 	    done = 1
+	    penalty = -10
 	if(abs(curr_euler_pose[1])>pitch_thres):
 	    rospy.logwarn("Robot Pose Pitch threshold exceeded")
 	    done = 1
+	    penalty = -10
 	if(abs(curr_euler_imu[0])>roll_thres):
 	    rospy.logwarn("IMU Roll threshold exceeded")
 	    done = 1
+	    penalty = -10
 	if(abs(curr_euler_imu[1])>pitch_thres):
 	    rospy.logwarn("IMU Roll threshold exceeded")
 	    done = 1
-	if((((np.array(state.end_effector_z_pos))>=abs(state.robot_pose[0][2])).sum())>=(len(np.array(state.end_effector_z_pos)))-2):
+ 	    penalty = -10
+	'''
+	if((((np.array(state.end_effector_z_pos))>=abs(state.robot_pose[0][2])).sum())>=(len(np.array(state.end_effector_z_pos)))-1):
 	    rospy.logwarn("4 or more limb end effector z positions are higher than the robot CoM z position")
 	    done = 1
+	'''
 	if(~np.any(state.end_effector_z)):
 	    rospy.logwarn("All end effectors are not in contact with the ground")
 	    done = 1
+	    penalty = -50
 	    # !!!Uses 'hacky' ground contact threshold!!!
 	if(abs(state.robot_pose[0][2])>z_thres):
 	    rospy.logwarn("Robot CoM z position is higher/lower than permissible")
 	    done = 1
+	    penalty = -50
 	# or(state.joint_positions>=joint_angles_lim)
 	# Cannot threshold on height == 0 for limbs in the air/touching the ground because frame = world frame, so no comparison with ground
 	# Robot orientation||Joint angles||End_effector_z wrt CoM body indicate collision, end episode 
-	return done	
+	return done,penalty	

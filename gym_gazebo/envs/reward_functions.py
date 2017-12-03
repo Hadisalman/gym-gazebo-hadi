@@ -20,7 +20,7 @@ class reward_function:
 	self.w_contact      = 0
 	self.w_movement     = 1
 	self.w_acceleration = 0
-	self.alpha = 10
+	self.alpha = 15
 	self.gamma = 1
 	###Weights to each function
 
@@ -31,6 +31,7 @@ class reward_function:
     def get_movement_direction(self):
 	#import pdb
 	#pdb.set_trace()
+
 	trans1 =  self.previous_state.robot_pose[0][:3]
 	trans1_mat = tf.transformations.translation_matrix(trans1)
 	rot1 = self.previous_state.robot_pose[0][3:]
@@ -43,11 +44,11 @@ class reward_function:
 	rot2_mat   = tf.transformations.quaternion_matrix(rot2)
 	mat2 = np.dot(trans2_mat, rot2_mat)
 	
-	mat3 = np.linalg.inv(np.dot(np.linalg.inv(mat1),mat2))
+	mat3 = np.dot(mat1,np.linalg.inv(mat2))
 	trans3 = tf.transformations.translation_from_matrix(mat3)
 	rot3 = tf.transformations.quaternion_from_matrix(mat3)
+	print trans3
 	return trans3
-	#print trans3
 	
     def forward_movement(self):
 	

@@ -191,8 +191,6 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
-
-
     def get_state(self,reset_flag):	
 	#################### State collection routine!! ##############
         #Imu data!
@@ -389,9 +387,8 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 			
 	elif model == 'ddpg' :
 		start = int(round(time.time() * 1000))  	
- 		while abs(int(round(time.time() * 1000)) - start)< 1000:       	
+ 		while abs(int(round(time.time() * 1000)) - start)< 500:       	
 			
-
 	      		self.pub['L'+'1'+'_'+'1'].publish(action[0])
         		self.pub['L'+'1'+'_'+'2'].publish(action[1])
         		self.pub['L'+'1'+'_'+'3'].publish(action[2])
@@ -410,9 +407,28 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 			self.pub['L'+'4'+'_'+'1'].publish(action[15])
 			self.pub['L'+'4'+'_'+'2'].publish(action[16])
 			self.pub['L'+'4'+'_'+'3'].publish(action[17])
-				
 			
-	
+			'''
+			self.pub['L'+'1'+'_'+'1'].publish(0)
+        		self.pub['L'+'1'+'_'+'2'].publish(np.pi)
+        		self.pub['L'+'1'+'_'+'3'].publish(0)
+			self.pub['L'+'6'+'_'+'1'].publish(0)
+			self.pub['L'+'6'+'_'+'2'].publish(np.pi)
+			self.pub['L'+'6'+'_'+'3'].publish(0)
+			self.pub['L'+'2'+'_'+'1'].publish(0)
+			self.pub['L'+'2'+'_'+'2'].publish(np.pi)
+			self.pub['L'+'2'+'_'+'3'].publish(0)
+			self.pub['L'+'5'+'_'+'1'].publish(0)
+			self.pub['L'+'5'+'_'+'2'].publish(np.pi)
+			self.pub['L'+'5'+'_'+'3'].publish(0)
+			self.pub['L'+'3'+'_'+'1'].publish(0)
+			self.pub['L'+'3'+'_'+'2'].publish(np.pi)
+			self.pub['L'+'3'+'_'+'3'].publish(0)
+			self.pub['L'+'4'+'_'+'1'].publish(0)
+			self.pub['L'+'4'+'_'+'2'].publish(np.pi)
+			self.pub['L'+'4'+'_'+'3'].publish(0)
+			'''
+			
         data = None
   	#is_self_collision()
 	prev_shadow_state = shadow_state(self.previous_state) 
@@ -458,10 +474,11 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 
 
 	#if(self.start != 1):
-	
+	#pdb.set_trace()	
 	reward_object = reward_function(prev_shadow_state,self. current_state)	
-	self.previous_state = cp.deepcopy(self.current_state)
 	reward = reward_object.total_reward()
+	#set the previous state only after getting the reward
+	self.previous_state = cp.deepcopy(self.current_state)
 	self.publish_reward(reward_object) # publishes the reward function individual values
 	#else:
 	#	self.start = 0	
@@ -479,6 +496,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	# Use term_conditions[1] to check if timeout or collision
 	serialized_state  = self.current_state.serialized_state()
         #return current_state, reward, done
+	self.reward_pub['total_reward'].publish(reward)
 	return serialized_state, reward, done, {}
 
     def _reset(self):
@@ -537,12 +555,11 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	self.reward_pub['acceleration_reward'].publish(reward_object.forward_acceleration())
 	self.reward_pub['forward_movement_reward'].publish(reward_object.forward_movement())
 	#self.reward_pub['movement_direction'].publish(reward_object.get_movement_direction())
-	self.reward_pub['total_reward'].publish(reward_object.total_reward())
 
     def term_cond(self,state):
 	roll_thres = float(np.pi/6) # Hard-coded using observed values
 	pitch_thres = float(np.pi/6) # Hard-coded using observed values
-	z_thres = 0.11985 # Hard-coded using observed values -- maximum height of the robot CoM when all angles are set to zero and the robot is made to stand
+	z_thres = 0.0001 # Hard-coded using observed values -- height at which robot CoM is closest to/in contact with the ground
 	#z_tol = 4.65*0.000001 # Hard-coded
 	done = 0 # Set done -> incomplete as defaul
 	penalty = 0
@@ -578,8 +595,8 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	    done = 1
 	    penalty = -50
 	    # !!!Uses 'hacky' ground contact threshold!!!
-	if(abs(state.robot_pose[0][2])>z_thres):
-	    rospy.logwarn("Robot CoM z position is higher/lower than permissible")
+	if(abs(state.robot_pose[0][2])<=z_thres):
+	    rospy.logwarn("Robot CoM z position is too close/in contact with the ground")
 	    done = 1
 	    penalty = -50
 	# or(state.joint_positions>=joint_angles_lim)

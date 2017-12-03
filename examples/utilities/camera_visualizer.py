@@ -12,7 +12,6 @@ from skimage.transform import rotate
 from skimage.viewer import ImageViewer
 
 class image_converter:
-
   def __init__(self):
 
     self.bridge = CvBridge()

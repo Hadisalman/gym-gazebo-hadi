@@ -67,7 +67,7 @@ save_dir='/home/hadis/Hadi/Reinforcement_Learning/gym-gazebo-hadi/examples/scrip
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
 parser.add_argument('--env-name', type=str, default='GazeboCircuit2cTurtlebotCameraNnEnv-v0')
-parser.add_argument('--weights', type=str, default=save_dir+'750000.h5f')
+parser.add_argument('--weights', type=str, default=save_dir+'100000.h5f')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
@@ -182,5 +182,5 @@ elif args.mode == 'test':
     if args.weights:
         weights_filename = args.weights
     dqn.load_weights(weights_filename)
-    dqn.test(env, nb_episodes=10, visualize=False)
+    dqn.test(env, nb_episodes=100, visualize=False)
 

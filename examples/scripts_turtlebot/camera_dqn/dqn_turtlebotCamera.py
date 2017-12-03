@@ -28,7 +28,6 @@ from keras.layers.pooling import MaxPooling2D
 from keras.regularizers import l2
 from keras.optimizers import SGD , Adam
 from keras import backend
-import memory
 import keras.backend as K
 import tensorflow as tf
 
@@ -62,10 +61,13 @@ K.set_session(sess)
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 4
 
+save_dir = '/home/hadis/Hadi/Reinforcement_Learning/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/2017-12-02_03-32-22'
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
 parser.add_argument('--env-name', type=str, default='GazeboCircuit2cTurtlebotCameraNnEnv-v0')
-parser.add_argument('--weights', type=str, default='dqn_GazeboCircuit2cTurtlebotCameraNnEnv-v0_weights.h5f')
+parser.add_argument('--weights', type=str, default=save_dir+'/700000.h5f')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
@@ -79,7 +81,6 @@ nb_actions = 3 #env.action_space.n
 
 # Next, we build our model. We use the same model that was described by Mnih et al. (2015).
 input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
-
 
 # obs,reward,done,_ =env.step(0)
 # embed()
@@ -118,7 +119,7 @@ memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
 # the agent initially explores the environment (high eps) and then gradually sticks to what it knows
 # (low eps). We also set a dedicated eps value that is used during testing. Note that we set it to 0.05
 # so that the agent still performs some random actions. This ensures that the agent cannot get stuck.
-policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., value_min=.1, value_test=.05,
+policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, value_min=.1, value_test=.05,
                               nb_steps=1000000)
 
 # The trade-off between exploration and exploitation is difficult and an on-going research topic.
@@ -163,8 +164,10 @@ if args.mode == 'train':
     
     callbacks += [tensorboardLogger(log_dir)]
 
-    #weights_filename = args.weights
-    #dqn.load_weights(weights_filename)    
+
+    weights_filename = args.weights
+    dqn.load_weights(weights_filename)  
+
     dqn.fit(env, callbacks=callbacks, nb_steps=3000000, log_interval=10000, verbose=1)
 
     # After training is done, we save the final weights one more time.

@@ -57,6 +57,8 @@ class ActorNetwork(object):
         self.tau = tau
 	self.action_lb = np.array([-1.22E+00,6.28E-01,-1.38E+00,8.73E-01,6.28E-01,-1.37E+00,-1.75E-01,6.28E-01,-1.43E+00,-1.75E-01,6.28E-01,-1.43E+00,8.72E-01,6.28E-01,-1.38E+00,-1.22E+00,6.28E-01,-1.38E+00],dtype=np.float32)
 	self.action_ub = np.array([-8.73E-01,1.24E+00,-8.18E-01,1.22E+00,1.22E+00,-8.19E-01,1.75E-01,1.24E+00,-1.11E+00,1.75E-01,1.24E+00,-1.11E+00,1.22E+00,1.24E+00,-8.18E-01,-8.72E-01,1.24E+00,-8.18E-01],dtype=np.float32)
+        
+
         self.max_out = np.ones(self.a_dim,dtype=np.float32)
 	self.min_out = np.ones(self.a_dim,dtype=np.float32)*-1
 	# Actor Network
@@ -237,7 +239,7 @@ class CriticNetwork(object):
 # Taken from https://github.com/openai/baselines/blob/master/baselines/ddpg/noise.py, which is
 # based on http://math.stackexchange.com/questions/1287634/implementing-ornstein-uhlenbeck-in-matlab
 class OrnsteinUhlenbeckActionNoise:
-    def __init__(self, mu, sigma=0.3, theta=.15, dt=1e-2, x0=None):
+    def __init__(self, mu, sigma=0.3, theta=.15, dt=2e-2, x0=None):
         self.theta = theta
         self.mu = mu
         self.sigma = sigma

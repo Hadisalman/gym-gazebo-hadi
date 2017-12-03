@@ -20,10 +20,12 @@ class reward_function:
 	self.w_contact      = 0
 	self.w_movement     = 1
 	self.w_acceleration = 0
-	self.alpha = 15
-	self.gamma = 1
+	self.alpha = 10
+	#self.gamma = 1
+	self.gamma = 0.5
+	self.min_input_control = 0.005 ##Change in joint angles
 	###Weights to each function
-
+	self.any_movement_threshold = 0.05
     #State is arranged as:
     #Joint angles(18), Joint velocities(18), Joint Torques(),  Force-feedback(), IMU pose(3DOF +  4quat), bot pose(7)
     #current_state
@@ -87,6 +89,15 @@ class reward_function:
         pos2 = np.array([self.current_state.robot_pose[0][0],self.current_state.robot_pose[0][1]])
 	#v = pos2 - pos1
 	disp = np.sqrt(np.sum(np.square(pos2 - pos1)))
+	
+
+	#This is going to cause some non-linearity in the reward function fitting!
+	if(disp < self.any_movement_threshold):
+		print "NO Movement"
+		return -0.5
+	else:
+		return 0.5
+		
 	return self.w_movement*disp
          
     #Check for ground contact for each leg 
@@ -97,7 +108,7 @@ class reward_function:
 	    a =  self.w_contact*-100
 	return a
 
-    #Periodicity model, trying to force similar energy through time
+    #Periodicity: Try to maintain (consume) the same energy every state
     def conservation_of_energy(self):
 	#import pdb
 	#pdb.set_trace()
@@ -140,7 +151,6 @@ class reward_function:
 	prev_joint_positions = cp.deepcopy(self.previous_state.joint_positions)
 	current_joint_positions = cp.deepcopy(self.current_state.joint_positions)
 	u = np.sqrt(np.sum(np.square(current_joint_positions - prev_joint_positions)))
-	
 	return u
     #Add reward for being normal to the surface
     def slip_avoidance(self):
@@ -160,5 +170,13 @@ class reward_function:
 
     def total_reward(self):
 	trans = self.get_movement_direction()
-	return (self.alpha*trans[1] - self.gamma*self.control_input())
+	u_sig = self.control_input()
+	lazy_penalty = 0
+	print u_sig
+	if(u_sig < self.min_input_control):
+		print "LAzy`"
+		lazy_penalty = -2
+
+		
+	return self.alpha*trans[1] - self.gamma*u_sig + lazy_penalty + self.any_movement()
 	#return (self.w_slip)/self.slip_avoidance() + self.w_control/self.control_input() + self.w_collision/self.self_collision() + self.w_energy/self.conservation_of_energy() + self.w_contact*self.ground_contact() + self.w_movement*self.any_movement() + self.w_acceleration*self.forward_acceleration()

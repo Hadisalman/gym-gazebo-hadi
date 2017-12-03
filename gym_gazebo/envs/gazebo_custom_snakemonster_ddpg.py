@@ -40,17 +40,19 @@ import moveit_commander
 #from sensor_msgs.msg import JointState
 from snake_monster.srv import *
 
+control_step_time = 2000 #200 ms for each step of the actions.. ie time taken by the PID
+no_contacts_penalty = -5 #Penalty of none of the feet on the ground
+soft_penalty = -3	#Penalty for falling 
+no_of_joints = 18	#18 DOF robot
 
-
-
-no_of_joints = 18
+#The coming variables are mainly for code to work to initialize arrays
 no_of_torque_directions = 6
 no_legs = 6
 leg_contact_threshold = 0.027
 state_dim = 185
 action_dimension = 18
 lol = 0
-model = 'ddpg' #define model here
+model = 'cpg' #define model here
 #Self collision detection function
 
 # Define Global Variables for logging:
@@ -346,7 +348,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 
             #if action == 0: #FORWARD
 	global model
-	global lol 
+	global control_step_time
 	log_joint_angles = np.zeros([100,18])
         sampling_done = False
 	sample_count = -1
@@ -387,7 +389,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 			
 	elif model == 'ddpg' :
 		start = int(round(time.time() * 1000))  	
- 		while abs(int(round(time.time() * 1000)) - start)< 500:       	
+ 		while abs(int(round(time.time() * 1000)) - start)< control_step_time:       	
 			
 	      		self.pub['L'+'1'+'_'+'1'].publish(action[0])
         		self.pub['L'+'1'+'_'+'2'].publish(action[1])
@@ -410,22 +412,22 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 			
 			'''
 			self.pub['L'+'1'+'_'+'1'].publish(0)
-        		self.pub['L'+'1'+'_'+'2'].publish(np.pi)
-        		self.pub['L'+'1'+'_'+'3'].publish(0)
+        		self.pub['L'+'1'+'_'+'2'].publish(0)
+        		self.pub['L'+'1'+'_'+'3'].publish(-np.pi/2)
 			self.pub['L'+'6'+'_'+'1'].publish(0)
-			self.pub['L'+'6'+'_'+'2'].publish(np.pi)
+			self.pub['L'+'6'+'_'+'2'].publish(0)
 			self.pub['L'+'6'+'_'+'3'].publish(0)
 			self.pub['L'+'2'+'_'+'1'].publish(0)
-			self.pub['L'+'2'+'_'+'2'].publish(np.pi)
+			self.pub['L'+'2'+'_'+'2'].publish(0)
 			self.pub['L'+'2'+'_'+'3'].publish(0)
 			self.pub['L'+'5'+'_'+'1'].publish(0)
-			self.pub['L'+'5'+'_'+'2'].publish(np.pi)
+			self.pub['L'+'5'+'_'+'2'].publish(0)
 			self.pub['L'+'5'+'_'+'3'].publish(0)
 			self.pub['L'+'3'+'_'+'1'].publish(0)
-			self.pub['L'+'3'+'_'+'2'].publish(np.pi)
+			self.pub['L'+'3'+'_'+'2'].publish(0)
 			self.pub['L'+'3'+'_'+'3'].publish(0)
 			self.pub['L'+'4'+'_'+'1'].publish(0)
-			self.pub['L'+'4'+'_'+'2'].publish(np.pi)
+			self.pub['L'+'4'+'_'+'2'].publish(0)
 			self.pub['L'+'4'+'_'+'3'].publish(0)
 			'''
 			
@@ -567,24 +569,26 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	curr_euler_pose = np.array(tf.transformations.euler_from_quaternion(q1))
 	q2 = state.imu_state[0:4]	
 	curr_euler_imu = np.array(tf.transformations.euler_from_quaternion(q2))
-	
+
+	global no_contacts_penalty
+	global soft_penalty	
 	#pdb.set_trace() 
 	if(abs(curr_euler_pose[0])>roll_thres):
 	    rospy.logwarn("Robot Pose Roll threshold exceeded")
 	    done = 1
-	    penalty = -10
+	    penalty = soft_penalty
 	if(abs(curr_euler_pose[1])>pitch_thres):
 	    rospy.logwarn("Robot Pose Pitch threshold exceeded")
 	    done = 1
-	    penalty = -10
+	    penalty = soft_penalty
 	if(abs(curr_euler_imu[0])>roll_thres):
 	    rospy.logwarn("IMU Roll threshold exceeded")
 	    done = 1
-	    penalty = -10
+	    penalty = soft_penalty
 	if(abs(curr_euler_imu[1])>pitch_thres):
 	    rospy.logwarn("IMU Roll threshold exceeded")
 	    done = 1
- 	    penalty = -10
+ 	    penalty = soft_penalty
 	'''
 	if((((np.array(state.end_effector_z_pos))>=abs(state.robot_pose[0][2])).sum())>=(len(np.array(state.end_effector_z_pos)))-1):
 	    rospy.logwarn("4 or more limb end effector z positions are higher than the robot CoM z position")
@@ -593,12 +597,12 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	if(~np.any(state.end_effector_z)):
 	    rospy.logwarn("All end effectors are not in contact with the ground")
 	    done = 1
-	    penalty = -50
+	    penalty = no_contacts_penalty
 	    # !!!Uses 'hacky' ground contact threshold!!!
 	if(abs(state.robot_pose[0][2])<=z_thres):
 	    rospy.logwarn("Robot CoM z position is too close/in contact with the ground")
 	    done = 1
-	    penalty = -50
+	    penalty = no_contacts_penalty
 	# or(state.joint_positions>=joint_angles_lim)
 	# Cannot threshold on height == 0 for limbs in the air/touching the ground because frame = world frame, so no comparison with ground
 	# Robot orientation||Joint angles||End_effector_z wrt CoM body indicate collision, end episode 

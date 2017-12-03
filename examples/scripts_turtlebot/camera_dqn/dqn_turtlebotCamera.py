@@ -61,13 +61,13 @@ K.set_session(sess)
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 4
 
-save_dir = '/home/hadis/Hadi/Reinforcement_Learning/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/2017-12-02_03-32-22'
-
+# save_dir = '/home/hadis/Hadi/Reinforcement_Learning/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/2017-12-02_03-32-22'
+save_dir='/home/hadis/Hadi/Reinforcement_Learning/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/best_weights/'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
 parser.add_argument('--env-name', type=str, default='GazeboCircuit2cTurtlebotCameraNnEnv-v0')
-parser.add_argument('--weights', type=str, default=save_dir+'/700000.h5f')
+parser.add_argument('--weights', type=str, default=save_dir+'750000.h5f')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.

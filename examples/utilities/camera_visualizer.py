@@ -12,11 +12,10 @@ from skimage.transform import rotate
 from skimage.viewer import ImageViewer
 
 class image_converter:
-
   def __init__(self):
 
     self.bridge = CvBridge()
-    self.image_sub = rospy.Subscriber("/sensors/cam/im_raw",Image,self.callback)
+    self.image_sub = rospy.Subscriber("/camera/rgb/image_raw",Image,self.callback)
 
   def callback(self,data):
     try:

@@ -8,6 +8,9 @@ import sys
 import os
 import random
 
+import roslib; roslib.load_manifest('gazebo_ros')
+
+from gazebo_msgs.msg import ModelState
 from gym import utils, spaces
 from gym_gazebo.envs import gazebo_env
 from geometry_msgs.msg import Twist
@@ -22,6 +25,9 @@ from skimage import transform, color, exposure
 from skimage.transform import rotate
 from skimage.viewer import ImageViewer
 
+
+
+
 class GazeboCircuit2cTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
 
     def __init__(self):
@@ -31,9 +37,10 @@ class GazeboCircuit2cTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
         self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
+        self.state_pub = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=10)
 
         self.reward_range = (-np.inf, np.inf)
-
+        self.episode = 0
         self._seed()
 
         self.last50actions = [0] * 50
@@ -41,6 +48,15 @@ class GazeboCircuit2cTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         self.img_rows = 84
         self.img_cols = 84
         self.img_channels = 1
+
+    def setmodelstate(self, modelname='mobile_base',x=0,y=0,yaw=0):
+        # rospy.init_node('ali')    
+        state=ModelState()
+        state.model_name = modelname
+        state.pose.position.x=x
+        state.pose.position.y=y
+        state.pose.orientation.z=yaw
+        self.state_pub.publish(state)
 
     def calculate_observation(self,data):
         min_range = 0.21
@@ -193,14 +209,15 @@ class GazeboCircuit2cTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         #return self.s_t, reward, done, {} # observation, reward, done, info
 
     def _reset(self):
-
+        self.episode +=1 
         self.last50actions = [0] * 50 #used for looping avoidance
-
         # Resets the state of the environment and returns an initial observation.
         rospy.wait_for_service('/gazebo/reset_simulation')
         try:
             #reset_proxy.call()
             self.reset_proxy()
+            self.setmodelstate(x=0,y=0,yaw=3.14*(self.episode%2))
+
         except rospy.ServiceException, e:
             print ("/gazebo/reset_simulation service call failed")
 

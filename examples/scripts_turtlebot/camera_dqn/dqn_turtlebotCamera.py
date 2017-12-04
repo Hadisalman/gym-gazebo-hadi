@@ -61,7 +61,7 @@ K.set_session(sess)
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 4
 
-save_dir = '/home/hadis/Hadi/Reinforcement_Learning/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/2017-12-02_03-32-22'
+save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/2017-12-02_03-32-22'
 
 
 parser = argparse.ArgumentParser()

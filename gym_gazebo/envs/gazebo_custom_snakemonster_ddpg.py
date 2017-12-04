@@ -40,7 +40,7 @@ import moveit_commander
 #from sensor_msgs.msg import JointState
 from snake_monster.srv import *
 
-control_step_time = 2000 #200 ms for each step of the actions.. ie time taken by the PID
+control_step_time = 200 #200 ms for each step of the actions.. ie time taken by the PID
 no_contacts_penalty = -5 #Penalty of none of the feet on the ground
 soft_penalty = -3	#Penalty for falling 
 no_of_joints = 18	#18 DOF robot
@@ -52,7 +52,7 @@ leg_contact_threshold = 0.027
 state_dim = 185
 action_dimension = 18
 lol = 0
-model = 'cpg' #define model here
+model = 'ddpg' #define model here
 #Self collision detection function
 
 # Define Global Variables for logging:

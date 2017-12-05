@@ -49,7 +49,7 @@ class reward_function:
 	mat3 = np.dot(mat1,np.linalg.inv(mat2))
 	trans3 = tf.transformations.translation_from_matrix(mat3)
 	rot3 = tf.transformations.quaternion_from_matrix(mat3)
-	print trans3
+	#print trans3
 	return trans3
 	
     def forward_movement(self):
@@ -81,7 +81,7 @@ class reward_function:
 		reward_acceleration = -forward_acceleration #Promote deceleration at point close to the goal!
         return reward_acceleration
 
-    #Not sure why I added this :p
+    #Not being used currently
     def any_movement(self):
         pos1 = self.previous_state.robot_pose[0]
         pos1 = np.array([self.previous_state.robot_pose[0][0],self.previous_state.robot_pose[0][1]])
@@ -178,5 +178,5 @@ class reward_function:
 		lazy_penalty = -2
 
 		
-	return self.alpha*trans[1] - self.gamma*u_sig + lazy_penalty + self.any_movement()
+	return self.alpha*(trans[1] - self.any_movement_threshold) - self.gamma*u_sig + lazy_penalty 
 	#return (self.w_slip)/self.slip_avoidance() + self.w_control/self.control_input() + self.w_collision/self.self_collision() + self.w_energy/self.conservation_of_energy() + self.w_contact*self.ground_contact() + self.w_movement*self.any_movement() + self.w_acceleration*self.forward_acceleration()

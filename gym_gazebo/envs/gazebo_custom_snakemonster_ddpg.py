@@ -40,7 +40,8 @@ import moveit_commander
 #from sensor_msgs.msg import JointState
 from snake_monster.srv import *
 
-control_step_time = 200 #200 ms for each step of the actions.. ie time taken by the PID
+
+control_step_time = 50 #200 ms for each step of the actions.. ie time taken by the PID
 no_contacts_penalty = -5 #Penalty of none of the feet on the ground
 soft_penalty = -3	#Penalty for falling 
 no_of_joints = 18	#18 DOF robot
@@ -390,7 +391,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	elif model == 'ddpg' :
 		start = int(round(time.time() * 1000))  	
  		while abs(int(round(time.time() * 1000)) - start)< control_step_time:       	
-			
+				
 	      		self.pub['L'+'1'+'_'+'1'].publish(action[0])
         		self.pub['L'+'1'+'_'+'2'].publish(action[1])
         		self.pub['L'+'1'+'_'+'3'].publish(action[2])
@@ -409,11 +410,16 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 			self.pub['L'+'4'+'_'+'1'].publish(action[15])
 			self.pub['L'+'4'+'_'+'2'].publish(action[16])
 			self.pub['L'+'4'+'_'+'3'].publish(action[17])
-			
 			'''
+			global lol
 			self.pub['L'+'1'+'_'+'1'].publish(0)
         		self.pub['L'+'1'+'_'+'2'].publish(0)
-        		self.pub['L'+'1'+'_'+'3'].publish(-np.pi/2)
+			if lol == 0 :
+        			self.pub['L'+'1'+'_'+'3'].publish(-np.pi/2)
+				lol = 1
+			else:
+        			self.pub['L'+'1'+'_'+'3'].publish(0)
+				lol = 0
 			self.pub['L'+'6'+'_'+'1'].publish(0)
 			self.pub['L'+'6'+'_'+'2'].publish(0)
 			self.pub['L'+'6'+'_'+'3'].publish(0)
@@ -429,7 +435,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 			self.pub['L'+'4'+'_'+'1'].publish(0)
 			self.pub['L'+'4'+'_'+'2'].publish(0)
 			self.pub['L'+'4'+'_'+'3'].publish(0)
-			'''
+			'''	
 			
         data = None
   	#is_self_collision()

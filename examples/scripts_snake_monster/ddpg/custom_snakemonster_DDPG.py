@@ -55,8 +55,8 @@ class ActorNetwork(object):
         self.action_bound = action_bound
         self.learning_rate = learning_rate
         self.tau = tau
-	self.action_lb = np.array([-1.22E+00,6.28E-01,-1.38E+00,8.73E-01,6.28E-01,-1.37E+00,-1.75E-01,6.28E-01,-1.43E+00,-1.75E-01,6.28E-01,-1.43E+00,8.72E-01,6.28E-01,-1.38E+00,-1.22E+00,6.28E-01,-1.38E+00],dtype=np.float32)
-	self.action_ub = np.array([-8.73E-01,1.24E+00,-8.18E-01,1.22E+00,1.22E+00,-8.19E-01,1.75E-01,1.24E+00,-1.11E+00,1.75E-01,1.24E+00,-1.11E+00,1.22E+00,1.24E+00,-8.18E-01,-8.72E-01,1.24E+00,-8.18E-01],dtype=np.float32)
+	self.action_lb = np.array([-1.22E+00,6.28E-01,-1.38E+00,8.73E-01,6.28E-01,-1.37E+00,-1.75E-01,6.28E-01,-1.43E+00,-1.75E-01,6.28E-01,-1.43E+00,8.72E-01,6.28E-01,-1.38E+00,-1.22E+00,6.28E-01,-1.38E+00],dtype=np.float32) - 0.2
+	self.action_ub = np.array([-8.73E-01,1.24E+00,-8.18E-01,1.22E+00,1.22E+00,-8.19E-01,1.75E-01,1.24E+00,-1.11E+00,1.75E-01,1.24E+00,-1.11E+00,1.22E+00,1.24E+00,-8.18E-01,-8.72E-01,1.24E+00,-8.18E-01],dtype=np.float32) + 0.2
         
 
         self.max_out = np.ones(self.a_dim,dtype=np.float32)
@@ -110,11 +110,11 @@ class ActorNetwork(object):
             net, self.a_dim, activation='tanh', weights_init=w_init)
         # Scale output to -action_bound to action_bound
 	if network_type == 'actor':
-            #scaled_out = tf.multiply(out, self.action_bound,name='actor_scaled_out')
-	    scaled_out = tf.add(tf.divide(tf.multiply(tf.subtract(self.action_ub,self.action_lb),tf.subtract(out,self.min_out)),tf.subtract(self.max_out,self.min_out)),self.action_lb, name='actor_sacled_out')
+            scaled_out = tf.multiply(out, self.action_bound,name='actor_sacled_out')
+	    #scaled_out = tf.add(tf.divide(tf.multiply(tf.subtract(self.action_ub,self.action_lb),tf.subtract(out,self.min_out)),tf.subtract(self.max_out,self.min_out)),self.action_lb, name='actor_sacled_out')
 	elif network_type == 'target':
-	    scaled_out = tf.add(tf.divide(tf.multiply(tf.subtract(self.action_ub,self.action_lb),tf.subtract(out,self.min_out)),tf.subtract(self.max_out,self.min_out)),self.action_lb, name='actor_target_scaled_out')
-	    #scaled_out = tf.multiply(out,self.action_bound,name='actor_target_scaled_out')
+	    #scaled_out = tf.add(tf.divide(tf.multiply(tf.subtract(self.action_ub,self.action_lb),tf.subtract(out,self.min_out)),tf.subtract(self.max_out,self.min_out)),self.action_lb, name='actor_target_scaled_out')
+	    scaled_out = tf.multiply(out,self.action_bound,name='actor_target_scaled_out')
         return inputs, out, scaled_out
 
     def train(self, inputs, a_gradient):

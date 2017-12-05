@@ -13,6 +13,9 @@ from geometry_msgs.msg import Twist
 from std_srvs.srv import Empty
 from std_msgs.msg import Float64
 from sensor_msgs.msg import LaserScan
+from gazebo_msgs.srv import GetModelState
+from gazebo_msgs.srv import SetModelState
+from gazebo_msgs.msg import ModelState
 
 from gym.utils import seeding
 
@@ -42,18 +45,18 @@ from snake_monster.srv import *
 
 
 control_step_time = 50 #200 ms for each step of the actions.. ie time taken by the PID
-no_contacts_penalty = -5 #Penalty of none of the feet on the ground
-soft_penalty = -3	#Penalty for falling 
+no_contacts_penalty = -10 #Penalty of none of the feet on the ground
+soft_penalty = -6	#Penalty for falling 
 no_of_joints = 18	#18 DOF robot
 
 #The coming variables are mainly for code to work to initialize arrays
 no_of_torque_directions = 6
 no_legs = 6
 leg_contact_threshold = 0.027
-state_dim = 185
+state_dim = 203
 action_dimension = 18
 lol = 0
-model = 'ddpg' #define model here
+model = 'cpg' #define model here
 #Self collision detection function
 
 # Define Global Variables for logging:
@@ -81,6 +84,7 @@ class shadow_state():
    	 self.joint_torque = cp.deepcopy(previous_state.joint_torque)
    	 self.joint_positions = cp.deepcopy(previous_state.joint_positions)
    	 self.joint_velocities = cp.deepcopy(previous_state.joint_velocities)
+   	 self.joint_commands = cp.deepcopy(previous_state.joint_commands)
    	 self.robot_pose = cp.deepcopy(previous_state.robot_pose)
    	 self.end_effector_z = cp.deepcopy(previous_state.end_effector_z) 
    	 self.end_effector_angles = cp.deepcopy(previous_state.end_effector_angles) 
@@ -93,6 +97,7 @@ class robot_state:
     joint_torque = np.zeros(no_of_joints*no_of_torque_directions)
     joint_positions = np.zeros(no_of_joints)
     joint_velocities = np.zeros(no_of_joints)
+    joint_commands = np.zeros(no_of_joints)
     robot_pose = np.asarray([0, 0, 0, 0, 0, 0, 1]) #3 Trans vector and 4 quat variables!
     end_effector_z = np.zeros(no_legs) 
     end_effector_angles = np.zeros(no_legs*3) 
@@ -104,10 +109,11 @@ class robot_state:
     #Joint states callback functions    18 + 18 = 36 vals
     def joint_state(self, state_data, joint_number):
 	#state_data_temp = cp.deepcopy(state_data)
-	jp = cp.deepcopy(state_data.process_value)
-        self.joint_positions[joint_number-1] = np.asarray([jp])
-        self.joint_velocities[joint_number-1] = np.asarray([state_data_temp.process_value_dot])
-
+	jp = cp.deepcopy(state_data)
+        self.joint_positions[joint_number-1] = np.asarray([jp.process_value])
+        self.joint_velocities[joint_number-1] = np.asarray([jp.process_value_dot])
+        self.joint_commands[joint_number-1] = np.asarray([jp.command])
+#	print "hhh"
         #return np.asarray([jp]),np.asarray([state_data.process_value_dot])
     #Hard code alert! Hardcoded the array indexes. 
     #The next set of functions are the call back functions that set the joint torques. THe torque sensing has 6 outputs in 3 force directions and 3 torque directions. The state will be one array of all the states, let them be updates as convenient. Felt no need to put locks here. It shouldn't affect the calculations much 
@@ -127,6 +133,7 @@ class robot_state:
         total_serialized.extend(self.imu_state.tolist())
         total_serialized.extend(self.joint_positions.tolist())
         total_serialized.extend(self.joint_velocities.tolist())
+        total_serialized.extend(self.joint_commands.tolist())
 	pose_list =  self.robot_pose.tolist()
 	total_serialized.extend(pose_list[0])
 	total_serialized.extend(pose_list[1])
@@ -142,6 +149,8 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
         self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
+	self.model_coordinates_func = rospy.ServiceProxy('/gazebo/get_model_state', GetModelState)
+	self.g_set_state = rospy.ServiceProxy('/gazebo/set_model_state', SetModelState)
         #self.action_space = spaces.Discrete(3) #F,L,R
         self.reward_range = (-np.inf, np.inf)
         
@@ -174,13 +183,16 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
                 self.pub['L' + str(i+1) + '_' + str(j+1)] = rospy.Publisher( '/snake_monster' + '/' + 'L' + str(i+1) + '_' + str(j+1) + '_'
                                             + 'eff_pos_controller' + '/command',
                                             Float64, queue_size=10 )
-
+	rospy.sleep(20)
+	rospy.wait_for_service('/gazebo/get_model_state')
+	self.robot_init_pose = self.model_coordinates_func('robot', 'map')
 	#publishers for reward function
 	self.reward_pub = {}
 	self.reward_pub['slip_reward'] = rospy.Publisher('/snake_monster/reward/slip_reward',Float64, queue_size=10)
 	self.reward_pub['control_reward'] = rospy.Publisher('/snake_monster/reward/control_reward',Float64, queue_size=10)
 	self.reward_pub['collision_reward'] = rospy.Publisher('/snake_monster/reward/collision_reward',Float64, queue_size=10)
 	self.reward_pub['energy_reward'] = rospy.Publisher('/snake_monster/reward/energy_reward',Float64, queue_size=10) 
+	self.reward_pub['angle_change'] = rospy.Publisher('/snake_monster/reward/angle_change',Float64, queue_size=10) 
 	self.reward_pub['contact_reward'] = rospy.Publisher('/snake_monster/reward/contact_reward',Float64, queue_size=10)
 	self.reward_pub['movement_reward'] = rospy.Publisher('/snake_monster/reward/movement_reward',Float64, queue_size=10)
 	self.reward_pub['acceleration_reward'] = rospy.Publisher('/snake_monster/reward/acceleration_reward',Float64,queue_size=10)		
@@ -212,7 +224,6 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
                 imu_data = rospy.wait_for_message("/snake_monster/sensors/imu", Imu, 0.1)
                 current_data.imu(imu_data) 
                 flag = True
-
             except:
                 pass
         
@@ -237,7 +248,6 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 		    
                     joint_data_temp = cp.deepcopy(joint_data)
                     current_data.joint_state(joint_data_temp, limb*3 + joint_no + 1)
-                    
                 except:
                     joint_no = joint_no -1 #Retry to get the value
                     pass
@@ -512,7 +522,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	#global reset_flag
 	#reset_flag = True
         # Resets the state of the environment and returns an initial observation.
-        
+        ''' 
 	rospy.wait_for_service('/gazebo/reset_world')
         try:
            # reset_proxy.call()   
@@ -520,7 +530,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         except rospy.ServiceException, e:
             print ("/gazebo/reset_simulation service call failed")
 	#self.listener.clear()
-	'''
+	
 	rospy.wait_for_service('/gazebo/reset_simulation')
         try:
            # reset_proxy.call()
@@ -528,7 +538,7 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         except rospy.ServiceException, e:
             print ("/gazebo/reset_simulation service call failed")
 	'''
-        # Unpause simulation to make observation
+        	
         rospy.wait_for_service('/gazebo/unpause_physics')
         try:
             #resp_pause = pause.call()
@@ -536,10 +546,50 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
         except rospy.ServiceException, e:
             print ("/gazebo/unpause_physics service call failed")
 	
-	 
+	rospy.wait_for_service('/gazebo/reset_world')
+        try:
+           # reset_proxy.call()   
+            rospy.ServiceProxy('/gazebo/reset_world', Empty)
+        except rospy.ServiceException, e:
+            print ("/gazebo/reset_simulation service call failed")
+
 	
-	#current_state = self.get_state(True) 
-	self.get_state(True) 
+	rospy.wait_for_service('/gazebo/set_model_state')
+	model_state = ModelState()
+	model_state.model_name = 'robot'
+	model_state.pose = self.robot_init_pose.pose
+	model_state.twist = self.robot_init_pose.twist
+	
+	terminal = True
+	while terminal:
+		self.g_set_state(model_state)
+		start = int(round(time.time() * 1000))  	
+		while abs(int(round(time.time() * 1000)) - start)< control_step_time:       	
+				
+			self.pub['L'+'1'+'_'+'1'].publish(0)
+			self.pub['L'+'1'+'_'+'2'].publish(0)
+			self.pub['L'+'1'+'_'+'3'].publish(0)
+			self.pub['L'+'6'+'_'+'1'].publish(0)
+			self.pub['L'+'6'+'_'+'2'].publish(0)
+			self.pub['L'+'6'+'_'+'3'].publish(0)
+			self.pub['L'+'2'+'_'+'1'].publish(0)
+			self.pub['L'+'2'+'_'+'2'].publish(0)
+			self.pub['L'+'2'+'_'+'3'].publish(0)
+			self.pub['L'+'5'+'_'+'1'].publish(0)
+			self.pub['L'+'5'+'_'+'2'].publish(0)
+			self.pub['L'+'5'+'_'+'3'].publish(0)
+			self.pub['L'+'3'+'_'+'1'].publish(0)
+			self.pub['L'+'3'+'_'+'2'].publish(0)
+			self.pub['L'+'3'+'_'+'3'].publish(0)
+			self.pub['L'+'4'+'_'+'1'].publish(0)
+			self.pub['L'+'4'+'_'+'2'].publish(0)
+			self.pub['L'+'4'+'_'+'3'].publish(0) 
+			
+		self.get_state(True) 
+		
+		terminal,penalty = self.term_cond(self.current_state)
+		
+	
 	rospy.wait_for_service('/gazebo/pause_physics')
         try:
             #resp_pause = pause.call()
@@ -555,7 +605,8 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 
     def publish_reward(self,reward_object):
 	self.reward_pub['slip_reward'].publish(reward_object.slip_avoidance())
-	self.reward_pub['control_reward'].publish(reward_object.control_input())
+	self.reward_pub['control_reward'].publish(reward_object.control_energy())
+	self.reward_pub['angle_change'].publish(reward_object.average_angle_change())
 	self.reward_pub['collision_reward'].publish(reward_object.self_collision())
 	self.reward_pub['energy_reward'].publish(reward_object.conservation_of_energy())
 	self.reward_pub['contact_reward'].publish(reward_object.ground_contact())
@@ -600,6 +651,11 @@ class GazeboCustomSnakeMonsterDDPG(gazebo_env.GazeboEnv):
 	    rospy.logwarn("4 or more limb end effector z positions are higher than the robot CoM z position")
 	    done = 1
 	'''
+	if(np.sum(state.end_effector_z) < 3):
+	    rospy.logwarn("More than 3 end effectors are not in contact with the ground")
+	    done = 1
+	    penalty = no_contacts_penalty
+	    # !!!Uses 'hacky' ground contact threshold!!!
 	if(~np.any(state.end_effector_z)):
 	    rospy.logwarn("All end effectors are not in contact with the ground")
 	    done = 1

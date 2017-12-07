@@ -41,6 +41,29 @@ if [ -z "$GYM_GAZEBO_WORLD_COSTUM" ]; then
 else
   bash -c 'sed "s,GYM_GAZEBO_WORLD_COSTUM=[^;]*,'GYM_GAZEBO_WORLD_COSTUM=`pwd`/../assets/worlds/costum.world'," -i ~/.bashrc'
 fi
+if [ -z "$GYM_GAZEBO_WORLD_SIMPLE" ]; then
+  bash -c 'echo "export GYM_GAZEBO_WORLD_SIMPLE="`pwd`/../assets/worlds/simple.world >> ~/.bashrc'
+else
+  bash -c 'sed "s,GYM_GAZEBO_WORLD_SIMPLE=[^;]*,'GYM_GAZEBO_WORLD_SIMPLE=`pwd`/../assets/worlds/simple.world'," -i ~/.bashrc'
+fi
+
+if [ -z "$GYM_GAZEBO_WORLD_PATH1" ]; then
+  bash -c 'echo "export GYM_GAZEBO_WORLD_PATH1="`pwd`/../assets/worlds/path1.world >> ~/.bashrc'
+else
+  bash -c 'sed "s,GYM_GAZEBO_WORLD_PATH1=[^;]*,'GYM_GAZEBO_WORLD_PATH1=`pwd`/../assets/worlds/path1.world'," -i ~/.bashrc'
+fi
+
+if [ -z "$GYM_GAZEBO_WORLD_PATH2" ]; then
+  bash -c 'echo "export GYM_GAZEBO_WORLD_PATH2="`pwd`/../assets/worlds/path2.world >> ~/.bashrc'
+else
+  bash -c 'sed "s,GYM_GAZEBO_WORLD_PATH2=[^;]*,'GYM_GAZEBO_WORLD_PATH2=`pwd`/../assets/worlds/path2.world'," -i ~/.bashrc'
+fi
+
+if [ -z "$GYM_GAZEBO_WORLD_ENVI" ]; then
+  bash -c 'echo "export GYM_GAZEBO_WORLD_ENVI="`pwd`/../assets/worlds/envi.world >> ~/.bashrc'
+else
+  bash -c 'sed "s,GYM_GAZEBO_WORLD_ENVI=[^;]*,'GYM_GAZEBO_WORLD_ENVI=`pwd`/../assets/worlds/envi.world'," -i ~/.bashrc'
+fi
 
 #copy altered urdf model
 cp -r ../assets/urdf/kobuki_urdf/urdf/ catkin_ws/src/kobuki/kobuki_description

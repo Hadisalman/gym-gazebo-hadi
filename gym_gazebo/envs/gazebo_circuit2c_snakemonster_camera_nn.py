@@ -8,6 +8,9 @@ import sys
 import os
 import random
 
+import roslib; roslib.load_manifest('gazebo_ros')
+from gazebo_msgs.msg import ModelState
+
 from gym import utils, spaces
 from gym_gazebo.envs import gazebo_env
 from geometry_msgs.msg import Twist
@@ -38,6 +41,7 @@ class GazeboCircuit2cSnakeMonsterCameraNnEnv(gazebo_env.GazeboEnv):
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
         self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
+        self.state_pub = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=10)
 
         self.action_space = spaces.Discrete(3) #F,L,R
         self.reward_range = (-np.inf, np.inf)
@@ -51,11 +55,20 @@ class GazeboCircuit2cSnakeMonsterCameraNnEnv(gazebo_env.GazeboEnv):
                                             Float64, queue_size=10 )
 
         self._seed()
-        
+        self.episode = 0
         self.last50actions = [0] * 50
         self.img_rows = 84
         self.img_cols = 84
         self.img_channels = 1
+
+    def setmodelstate(self, modelname='robot',x=0,y=0,yaw=0):
+        # rospy.init_node('ali')    
+        state=ModelState()
+        state.model_name = modelname
+        state.pose.position.x=x
+        state.pose.position.y=y
+        state.pose.orientation.z=yaw
+        self.state_pub.publish(state)
 
     def calculate_observation(self,data):
         min_range = 0.4
@@ -346,16 +359,23 @@ class GazeboCircuit2cSnakeMonsterCameraNnEnv(gazebo_env.GazeboEnv):
         center_detour = abs(right_sum - left_sum)/5
 
         # 3 actions
+        # if not done:
+        #     if action == 0:
+        #         reward = 1 / float(center_detour+1)
+        #     elif action_sum > 45: #L or R looping
+        #         reward = -0.5
+        #     else: #L or R no looping
+        #         reward = 0.5 / float(center_detour+1)
+        # else:
+        #     reward = -100
+
         if not done:
             if action == 0:
-                reward = 1 / float(center_detour+1)
-            elif action_sum > 45: #L or R looping
-                reward = -0.5
-            else: #L or R no looping
-                reward = 0.5 / float(center_detour+1)
+                reward = 5
+            else:
+                reward = 0.00
         else:
-            reward = -100
-
+            reward = -200
         #print("detour= "+str(center_detour)+" :: reward= "+str(reward)+" ::action="+str(action))
 
         '''x_t = skimage.color.rgb2gray(cv_image)
@@ -385,6 +405,8 @@ class GazeboCircuit2cSnakeMonsterCameraNnEnv(gazebo_env.GazeboEnv):
         try:
             #reset_proxy.call()
             self.reset_proxy()
+            # self.setmodelstate(x=0,y=0,yaw=3.14/2+3.14*(self.episode%2))
+
         except rospy.ServiceException, e:
             print ("/gazebo/reset_simulation service call failed")
 

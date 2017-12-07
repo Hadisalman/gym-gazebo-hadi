@@ -84,8 +84,8 @@
       <shadows>0</shadows>
     </scene>
     <physics type='ode'>
-      <!-- <max_step_size>0```.0015</max_step_size> -->
-      <max_step_size>0.01</max_step_size>
+      <max_step_size>0.0015</max_step_size>
+      <!-- <max_step_size>0.01</max_step_size> -->
       <real_time_factor>1</real_time_factor>
       <real_time_update_rate>0</real_time_update_rate>
       <gravity>0 0 -9.8</gravity>
@@ -103,7 +103,7 @@
     </gui>
     <!-- A simple circuit -->
     <include>
-      <uri>model://Circuit_ql_2c</uri>
+      <uri>model://simple_maze</uri>
       <pose>0 -3.85 0 0 0 1.567</pose>
     </include>
   </world>

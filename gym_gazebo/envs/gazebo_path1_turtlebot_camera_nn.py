@@ -28,11 +28,11 @@ from skimage.viewer import ImageViewer
 
 
 
-class GazeboCircuit2cTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
+class GazeboPath1TurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
 
     def __init__(self):
         # Launch the simulation with the given launchfile name
-        gazebo_env.GazeboEnv.__init__(self, "GazeboCircuit2cTurtlebotLidar_v0.launch")
+        gazebo_env.GazeboEnv.__init__(self, "GazeboPath1TurtlebotLidar_v0.launch")
         self.vel_pub = rospy.Publisher('/mobile_base/commands/velocity', Twist, queue_size=5)
         self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)

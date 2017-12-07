@@ -110,7 +110,7 @@ print(model.summary())
 
 # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
 # even the metrics!
-memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
+memory = SequentialMemory(limit=100000, window_length=WINDOW_LENGTH)
 
 # class turtleBotProcessor(Processor):
 # processor = turtleBotProcessor()
@@ -121,7 +121,7 @@ memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
 # (low eps). We also set a dedicated eps value that is used during testing. Note that we set it to 0.05
 # so that the agent still performs some random actions. This ensures that the agent cannot get stuck.
 policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1, value_min=.1, value_test=.05,
-                              nb_steps=100000)
+                              nb_steps=1000000)
 
 # The trade-off between exploration and exploitation is difficult and an on-going research topic.
 # If you want, you can experiment with the parameters or use a different policy. Another popular one

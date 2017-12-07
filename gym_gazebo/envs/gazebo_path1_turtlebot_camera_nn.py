@@ -24,8 +24,10 @@ import skimage as skimage
 from skimage import transform, color, exposure
 from skimage.transform import rotate
 from skimage.viewer import ImageViewer
+import getModelStates
 
-
+from tf.transformations import quaternion_from_euler
+# import tf
 
 
 class GazeboPath1TurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
@@ -42,6 +44,7 @@ class GazeboPath1TurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         self.reward_range = (-np.inf, np.inf)
         self.episode = 0
         self._seed()
+        
 
         self.last50actions = [0] * 50
 
@@ -49,13 +52,20 @@ class GazeboPath1TurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         self.img_cols = 84
         self.img_channels = 1
 
+        self.initial_angles = [np.pi/2,np.pi/2]
+
     def setmodelstate(self, modelname='mobile_base',x=0,y=0,yaw=0):
         # rospy.init_node('ali')    
         state=ModelState()
         state.model_name = modelname
         state.pose.position.x=x
         state.pose.position.y=y
-        state.pose.orientation.z=yaw
+        q = quaternion_from_euler(0, 0, yaw)
+        state.pose.orientation.x=q[0]
+        state.pose.orientation.y=q[1]
+        state.pose.orientation.z=q[2]
+        state.pose.orientation.w=q[3]
+        
         self.state_pub.publish(state)
 
     def calculate_observation(self,data):
@@ -110,8 +120,16 @@ class GazeboPath1TurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
             except:
                 pass
 
-        done = self.calculate_observation(data)
+        done = self.calculate_observation(data) 
 
+        current_state = getModelStates.gms_client('mobile_base','world')
+
+        if (current_state.pose.position.y > 7.0):
+            done = True
+
+        # print ('Y:', current_state.pose.position.y)
+
+        
         image_data = None
         success=False
         cv_image = None
@@ -216,7 +234,7 @@ class GazeboPath1TurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         try:
             #reset_proxy.call()
             self.reset_proxy()
-            self.setmodelstate(x=0,y=0,yaw=3.14*(self.episode%2))
+            self.setmodelstate(x=0,y=0,yaw=self.initial_angles[self.episode%2])
 
         except rospy.ServiceException, e:
             print ("/gazebo/reset_simulation service call failed")

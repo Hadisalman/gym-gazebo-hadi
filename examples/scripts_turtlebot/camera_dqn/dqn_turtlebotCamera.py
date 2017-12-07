@@ -61,13 +61,13 @@ K.set_session(sess)
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 4
 
-save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/best_weights/'
-
+save_dir = '/home/hadis/Hadi/Reinforcement_Learning/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/best_weights/'
+# save_dir = '/home/hadis/Hadi/Reinforcement_Learning/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/2017-12-04_07-23-42'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
 parser.add_argument('--env-name', type=str, default='GazeboCircuit2cTurtlebotCameraNnEnv-v0')
-parser.add_argument('--weights', type=str, default=save_dir+'900000.h5f')
+parser.add_argument('--weights', type=str, default=save_dir+'/900000.h5f')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
@@ -81,7 +81,7 @@ nb_actions = 3 #env.action_space.n
 
 # Next, we build our model. We use the same model that was described by Mnih et al. (2015).
 input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
-
+embed()
 # obs,reward,done,_ =env.step(0)
 # embed()
 
@@ -94,6 +94,19 @@ elif K.image_dim_ordering() == 'th':
     model.add(Permute((1, 2, 3), input_shape=input_shape))
 else:
     raise RuntimeError('Unknown image_dim_ordering.')
+# model.add(Convolution2D(32, 8, 8, subsample=(4, 4), input_shape=input_shape))
+# model.add(LeakyReLU())
+# model.add(Convolution2D(64, 4, 4, subsample=(2, 2)))
+# model.add(LeakyReLU())
+# model.add(Convolution2D(64, 3, 3, subsample=(1, 1)))
+# model.add(LeakyReLU())
+# model.add(Flatten())
+# model.add(Dense(512))
+# model.add(LeakyReLU())
+# model.add(Dense(nb_actions))
+# model.add(Activation('linear'))
+# print(model.summary())
+
 model.add(Convolution2D(32, 8, 8, subsample=(4, 4), input_shape=input_shape))
 model.add(Activation('relu'))
 model.add(Convolution2D(64, 4, 4, subsample=(2, 2)))
@@ -131,7 +144,7 @@ policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, valu
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
                 nb_steps_warmup=50000, gamma=.99, target_model_update=10000,
                enable_dueling_network=True, dueling_type='avg', train_interval=4)
-dqn.compile(RMSprop(lr=.000025), metrics=['mae'])
+dqn.compile(Adam(lr=.00025), metrics=['mae'])
 
 log_parent_dir = './train_log'
 log_dir=''
@@ -165,8 +178,8 @@ if args.mode == 'train':
     callbacks += [tensorboardLogger(log_dir)]
 
 
-    weights_filename = args.weights
-    dqn.load_weights(weights_filename)  
+    # weights_filename = args.weights
+    # dqn.load_weights(weights_filename)  
 
     dqn.fit(env, callbacks=callbacks, nb_steps=3000000, log_interval=10000, verbose=1)
 

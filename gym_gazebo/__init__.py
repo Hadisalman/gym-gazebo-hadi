@@ -37,6 +37,24 @@ register(
     entry_point='gym_gazebo.envs:GazeboRoundTurtlebotLidarEnv',
     # More arguments here
 )
+## Deep learning project
+register(
+    id='GazeboPath1TurtlebotCameraNnEnv-v0',
+    entry_point='gym_gazebo.envs:GazeboPath1TurtlebotCameraNnEnv',
+    # More arguments here
+)
+register(
+    id='GazeboPath2TurtlebotCameraNnEnv-v0',
+    entry_point='gym_gazebo.envs:GazeboPath2TurtlebotCameraNnEnv',
+    # More arguments here
+)
+register(
+    id='GazeboEnviTurtlebotCameraNnEnv-v0',
+    entry_point='gym_gazebo.envs:GazeboEnviTurtlebotCameraNnEnv',
+    # More arguments here
+)
+
+
 
 # Erle-Copter envs
 register(

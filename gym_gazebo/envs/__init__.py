@@ -8,6 +8,11 @@ from gym_gazebo.envs.gazebo_circuit2_turtlebot_lidar_nn import GazeboCircuit2Tur
 from gym_gazebo.envs.gazebo_circuit2c_turtlebot_camera_nn import GazeboCircuit2cTurtlebotCameraNnEnv
 from gym_gazebo.envs.gazebo_round_turtlebot_lidar import GazeboRoundTurtlebotLidarEnv
 
+# Deep learrning project
+from gym_gazebo.envs.gazebo_path1_turtlebot_camera_nn import GazeboPath1TurtlebotCameraNnEnv
+from gym_gazebo.envs.gazebo_path2_turtlebot_camera_nn import GazeboPath2TurtlebotCameraNnEnv
+from gym_gazebo.envs.gazebo_envi_turtlebot_camera_nn import GazeboEnviTurtlebotCameraNnEnv
+
 #SnakeMonster
 from gym_gazebo.envs.gazebo_circuit2_snakemonster_lidar import GazeboCircuit2SnakeMonsterLidarEnv
 from gym_gazebo.envs.gazebo_snake_lidar import GazeboSnakeLidarEnv

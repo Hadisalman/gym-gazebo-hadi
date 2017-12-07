@@ -66,16 +66,18 @@ save_dir = '/home/hadis/Hadi/Reinforcement_Learning/gym-gazebo-hadi/examples/scr
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
-parser.add_argument('--env-name', type=str, default='GazeboCircuit2cTurtlebotCameraNnEnv-v0')
-parser.add_argument('--weights', type=str, default=save_dir+'/900000.h5f')
+parser.add_argument('--env-name', type=str, default='GazeboPath2TurtlebotCameraNnEnv-v0')
+parser.add_argument('--weights', type=str, default=save_dir+'900000.h5f')
+
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
 # env = gym.make(args.env_name)
-env = gym.make('GazeboCircuit2cTurtlebotCameraNnEnv-v0')
-
+env = gym.make(args.env_name)
+env.reset()
 np.random.seed(123)
 env.seed(123)
+embed()
 #TODO modify the turtlebot environment so that it accomodates with gym environments (action_space ...)
 nb_actions = 3 #env.action_space.n
 
@@ -122,7 +124,7 @@ print(model.summary())
 
 # Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
 # even the metrics!
-memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
+memory = SequentialMemory(limit=100000, window_length=WINDOW_LENGTH)
 
 # class turtleBotProcessor(Processor):
 # processor = turtleBotProcessor()
@@ -132,7 +134,7 @@ memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
 # the agent initially explores the environment (high eps) and then gradually sticks to what it knows
 # (low eps). We also set a dedicated eps value that is used during testing. Note that we set it to 0.05
 # so that the agent still performs some random actions. This ensures that the agent cannot get stuck.
-policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, value_min=.1, value_test=.05,
+policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1, value_min=.1, value_test=.05,
                               nb_steps=1000000)
 
 # The trade-off between exploration and exploitation is difficult and an on-going research topic.
@@ -142,7 +144,7 @@ policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, valu
 # Feel free to give it a try!
 
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
-                nb_steps_warmup=50000, gamma=.99, target_model_update=10000,
+                nb_steps_warmup=10000, gamma=.99, target_model_update=5000,
                enable_dueling_network=True, dueling_type='avg', train_interval=4)
 dqn.compile(Adam(lr=.00025), metrics=['mae'])
 

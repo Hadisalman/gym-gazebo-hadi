@@ -228,8 +228,8 @@ class GazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         try:
             #reset_proxy.call()
             self.reset_proxy()
-            self.setmodelstate(x=4,y=7,yaw=self.initial_angles[self.episode%2])
-            # self.setmodelstate(x=0,y=-2,yaw=self.initial_angles[self.episode%2])
+            # self.setmodelstate(x=4,y=7,yaw=self.initial_angles[self.episode%2])
+            self.setmodelstate(x=0,y=-2,yaw=self.initial_angles[self.episode%2])
             # self.setmodelstate(x=1,y=12,yaw=3.14)
 
         except rospy.ServiceException, e:

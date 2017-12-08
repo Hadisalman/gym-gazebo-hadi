@@ -30,7 +30,7 @@ from keras.optimizers import SGD , Adam
 from keras import backend
 import keras.backend as K
 import tensorflow as tf
-
+from copy import deepcopy
 import argparse
 from PIL import Image
 import numpy as np
@@ -61,13 +61,13 @@ K.set_session(sess)
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 4
 
-save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/best_weights/'
-# save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/'
+save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/weights_to_use_DL/'
+# save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboEnviTurtlebotCameraNnEnv-v0/2017-12-07_22-24-54/'
 # 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
 parser.add_argument('--env-name', type=str, default='GazeboEnviTurtlebotCameraNnEnv-v0')
-parser.add_argument('--weights', type=str, default=save_dir+'900000.h5f')
+parser.add_argument('--weights', type=str, default=save_dir+'path1.h5f')
 
 args = parser.parse_args()
 
@@ -83,19 +83,19 @@ nb_actions = 3 #env.action_space.n
 
 # Next, we build our model. We use the same model that was described by Mnih et al. (2015).
 input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
-embed()
+# embed()
 # obs,reward,done,_ =env.step(0)
 # embed()
 
 model = Sequential()
 if K.image_dim_ordering() == 'tf':
-    # (width, height, channels)
-    model.add(Permute((2, 3, 1), input_shape=input_shape))
+	# (width, height, channels)
+	model.add(Permute((2, 3, 1), input_shape=input_shape))
 elif K.image_dim_ordering() == 'th':
-    # (channels, width, height)
-    model.add(Permute((1, 2, 3), input_shape=input_shape))
+	# (channels, width, height)
+	model.add(Permute((1, 2, 3), input_shape=input_shape))
 else:
-    raise RuntimeError('Unknown image_dim_ordering.')
+	raise RuntimeError('Unknown image_dim_ordering.')
 # model.add(Convolution2D(32, 8, 8, subsample=(4, 4), input_shape=input_shape))
 # model.add(LeakyReLU())
 # model.add(Convolution2D(64, 4, 4, subsample=(2, 2)))
@@ -135,7 +135,7 @@ memory = SequentialMemory(limit=100000, window_length=WINDOW_LENGTH)
 # (low eps). We also set a dedicated eps value that is used during testing. Note that we set it to 0.05
 # so that the agent still performs some random actions. This ensures that the agent cannot get stuck.
 policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, value_min=.1, value_test=.05,
-                              nb_steps=100000)
+							  nb_steps=100000)
 
 # The trade-off between exploration and exploitation is difficult and an on-going research topic.
 # If you want, you can experiment with the parameters or use a different policy. Another popular one
@@ -144,8 +144,8 @@ policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, valu
 # Feel free to give it a try!
 
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
-                nb_steps_warmup=10000, gamma=.99, target_model_update=1000,
-               enable_dueling_network=True, dueling_type='avg', train_interval=4)
+				nb_steps_warmup=10000, gamma=.99, target_model_update=1000,
+			   enable_dueling_network=True, dueling_type='avg', train_interval=4)
 
 dqn.compile(Adam(lr=.00025), metrics=['mae'])
 
@@ -153,50 +153,63 @@ log_parent_dir = './train_log'
 log_dir=''
 
 def make_log_dir():
-    import datetime, os
-    current_timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    log_dir = os.path.join(log_parent_dir, args.env_name, current_timestamp)
-    os.makedirs(log_dir)
-    # create empty logfiles now
-    # log_files = {
-    #                   'train_loss': os.path.join(lod_dir, 'train_loss.txt'),
-    #                   'train_episode_reward': os.path.join(lod_dir, 'train_episode_reward.txt'),
-    #                   'test_episode_reward': os.path.join(lod_dir, 'test_episode_reward.txt')
-    #                 }
-    # for key in self.log_files:
-    #   open(os.path.join(self.log_dir, self.log_files[key]), 'a').close()
-    return log_dir
+	import datetime, os
+	current_timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+	log_dir = os.path.join(log_parent_dir, args.env_name, current_timestamp)
+	os.makedirs(log_dir)
+	# create empty logfiles now
+	# log_files = {
+	#                   'train_loss': os.path.join(lod_dir, 'train_loss.txt'),
+	#                   'train_episode_reward': os.path.join(lod_dir, 'train_episode_reward.txt'),
+	#                   'test_episode_reward': os.path.join(lod_dir, 'test_episode_reward.txt')
+	#                 }
+	# for key in self.log_files:
+	#   open(os.path.join(self.log_dir, self.log_files[key]), 'a').close()
+	return log_dir
 
 if args.mode == 'train':
-    log_dir = make_log_dir()
-    # Okay, now it's time to learn something! We capture the interrupt exception so that training
-    # can be prematurely aborted. Notice that you can the built-in Keras callbacks!
-    weights_filename =os.path.join(log_dir, 'weights','dqn_{}_weights.h5f'.format(args.env_name))
-    checkpoint_weights_filename = os.path.join(log_dir, '{step}.h5f')
-    callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=10000)]
-    
-    # log_filename = 'dqn_{}_log.json'.format(args.env_name)
-    # callbacks += [FileLogger(log_filename, interval=100)]
-    
-    callbacks += [tensorboardLogger(log_dir)]
+	log_dir = make_log_dir()
+	# Okay, now it's time to learn something! We capture the interrupt exception so that training
+	# can be prematurely aborted. Notice that you can the built-in Keras callbacks!
+	weights_filename =os.path.join(log_dir, 'weights','dqn_{}_weights.h5f'.format(args.env_name))
+	checkpoint_weights_filename = os.path.join(log_dir, '{step}.h5f')
+	callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=10000)]
+	
+	# log_filename = 'dqn_{}_log.json'.format(args.env_name)
+	# callbacks += [FileLogger(log_filename, interval=100)]
+	
+	callbacks += [tensorboardLogger(log_dir)]
 
 
-    # weights_filename = args.weights
-    # dqn.load_weights(weights_filename)  
+	weights_filename = args.weights
+	dqn.load_weights(weights_filename)  
 
-    dqn.fit(env, callbacks=callbacks, nb_steps=3000000, log_interval=10000, verbose=1)
+	dqn.fit(env, callbacks=callbacks, nb_steps=3000000, log_interval=10000, verbose=1)
 
-    # After training is done, we save the final weights one more time.
-    dqn.save_weights(weights_filename, overwrite=True)
-    
-    # Finally, evaluate our algorithm for 10 episodes.
-    dqn.test(env, nb_episodes=10, visualize=False)
-
+	# After training is done, we save the final weights one more time.
+	dqn.save_weights(weights_filename, overwrite=True)
+	
+	# Finally, evaluate our algorithm for 10 episodes.
+	dqn.test(env, nb_episodes=10, visualize=False)
 
 elif args.mode == 'test':
-    weights_filename = 'dqn_{}_weights.h5f'.format(args.env_name)
-    if args.weights:
-        weights_filename = args.weights
-    dqn.load_weights(weights_filename)
-    dqn.test(env, nb_episodes=100, visualize=False)
+	weights_filename = 'dqn_{}_weights.h5f'.format(args.env_name)
+	if args.weights:
+		weights_filename = args.weights
+	dqn.load_weights(weights_filename)
+	dqn.test(env, nb_episodes=100, visualize=False)
+	
 
+	# for _ in range(100):
+	# 	done = False
+	# 	observation = env.reset()
+
+	# 	while not done:
+	# 		action = dqn.forward(observation)
+	# 		observation, r, d, info = env.step(action)
+	# 		observation = deepcopy(observation)
+	# 		reward = r
+	# 		if d:
+	# 			done = True
+	# 		dqn.backward(reward, terminal=done)
+	 

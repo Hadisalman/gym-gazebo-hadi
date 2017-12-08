@@ -107,7 +107,7 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         self.dqn2.load_weights(self.weight_file_2)
         
         self.current_state = 0
-
+        self.hand_crafte_policy = False
         self.frame_buffer = np.zeros((WINDOW_LENGTH,self.img_rows,self.img_cols))
 # Set up the code for: 
     # Tensorboard Which policy is active
@@ -183,14 +183,14 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         k=0
         # For how many ever steps the low level policy is to be executed
         while not(is_done) and (k<number_steps):
-            meta_action=0
-
             current_state = getModelStates.gms_client('mobile_base','world')
-
-            if (current_state.pose.position.y > 7.0):
-                meta_action=1
-            if (current_state.pose.position.y > 7.0 and current_state.pose.position.x<-1):
+            
+            if self.hand_crafte_policy:          
                 meta_action=0
+                if (current_state.pose.position.y > 7.0):
+                    meta_action=1
+                if (current_state.pose.position.y > 7.0 and current_state.pose.position.x<-1):
+                    meta_action=0
                 
             print("Meta action:",meta_action)
             if meta_action==0:
@@ -209,9 +209,13 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
                 # observation = deepcopy(observation)
                 self.dqn2.backward(onestep_reward, terminal=is_done)
 
-            # print("Low level",lowlevel_action)
+            ## checkfor maze limits --> finish episode if out of limits
+            if (current_state.pose.position.y < -3.0) || (current_state.pose.position.x < -9):
+                is_done=True
+ 
 
-            
+            # print("Low level",lowlevel_action)
+           
             # print("IS IT DONE?", is_done)
             # Adding the one step reward to the cummulative_reward.
             cummulative_reward += onestep_reward

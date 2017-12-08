@@ -124,7 +124,7 @@ class GazeboPath1TurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
 
         current_state = getModelStates.gms_client('mobile_base','world')
 
-        if (current_state.pose.position.y > 7.0):
+        if (current_state.pose.position.y > 10.0):
             done = True
 
         # print ('Y:', current_state.pose.position.y)

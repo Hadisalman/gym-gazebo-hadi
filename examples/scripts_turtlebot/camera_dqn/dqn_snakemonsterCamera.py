@@ -61,13 +61,13 @@ K.set_session(sess)
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 4
 
-# save_dir = '/home/hadis/Hadi/Reinforcement_Learning/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/2017-12-02_03-32-22'
-save_dir='/home/hadis/Hadi/Reinforcement_Learning/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/best_weights/'
+save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cSnakeMonsterCameraNnEnv-v0/2017-12-03_23-26-49'
+# save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/best_weights/'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
 parser.add_argument('--env-name', type=str, default='GazeboCircuit2cSnakeMonsterCameraNnEnv-v0')
-parser.add_argument('--weights', type=str, default=save_dir+'100000.h5f')
+parser.add_argument('--weights', type=str, default=save_dir+'/100000.h5f')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
@@ -165,8 +165,8 @@ if args.mode == 'train':
     callbacks += [tensorboardLogger(log_dir)]
 
 
-    weights_filename = args.weights
-    dqn.load_weights(weights_filename)  
+    # weights_filename = args.weights
+    # dqn.load_weights(weights_filename)  
 
     dqn.fit(env, callbacks=callbacks, nb_steps=3000000, log_interval=10000, verbose=1)
 

@@ -62,11 +62,11 @@ INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 4
 
 save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/best_weights/'
-
+# save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
-parser.add_argument('--env-name', type=str, default='GazeboPath2TurtlebotCameraNnEnv-v0')
+parser.add_argument('--env-name', type=str, default='GazeboEnviTurtlebotCameraNnEnv-v0')
 parser.add_argument('--weights', type=str, default=save_dir+'900000.h5f')
 args = parser.parse_args()
 
@@ -76,7 +76,7 @@ env = gym.make(args.env_name)
 env.reset()
 np.random.seed(123)
 env.seed(123)
-embed()
+# embed()
 #TODO modify the turtlebot environment so that it accomodates with gym environments (action_space ...)
 nb_actions = 3 #env.action_space.n
 
@@ -120,8 +120,8 @@ memory = SequentialMemory(limit=100000, window_length=WINDOW_LENGTH)
 # the agent initially explores the environment (high eps) and then gradually sticks to what it knows
 # (low eps). We also set a dedicated eps value that is used during testing. Note that we set it to 0.05
 # so that the agent still performs some random actions. This ensures that the agent cannot get stuck.
-policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1, value_min=.1, value_test=.05,
-                              nb_steps=1000000)
+policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, value_min=.1, value_test=.05,
+                              nb_steps=100000)
 
 # The trade-off between exploration and exploitation is difficult and an on-going research topic.
 # If you want, you can experiment with the parameters or use a different policy. Another popular one
@@ -130,9 +130,9 @@ policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1, value
 # Feel free to give it a try!
 
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
-                nb_steps_warmup=10000, gamma=.99, target_model_update=5000,
+                nb_steps_warmup=10000, gamma=.99, target_model_update=1000,
                enable_dueling_network=True, dueling_type='avg', train_interval=4)
-dqn.compile(RMSprop(lr=.000025), metrics=['mae'])
+dqn.compile(RMSprop(lr=.00025), metrics=['mae'])
 
 log_parent_dir = './train_log'
 log_dir=''
@@ -158,7 +158,7 @@ if args.mode == 'train':
     # can be prematurely aborted. Notice that you can the built-in Keras callbacks!
     weights_filename =os.path.join(log_dir, 'weights','dqn_{}_weights.h5f'.format(args.env_name))
     checkpoint_weights_filename = os.path.join(log_dir, '{step}.h5f')
-    callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=50000)]
+    callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=10000)]
     
     # log_filename = 'dqn_{}_log.json'.format(args.env_name)
     # callbacks += [FileLogger(log_filename, interval=100)]

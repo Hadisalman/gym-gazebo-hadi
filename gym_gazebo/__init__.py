@@ -53,7 +53,11 @@ register(
     entry_point='gym_gazebo.envs:GazeboEnviTurtlebotCameraNnEnv',
     # More arguments here
 )
-
+register(
+    id='MetaGazeboEnviTurtlebotCameraNnEnv-v0',
+    entry_point='gym_gazebo.envs:MetaGazeboEnviTurtlebotCameraNnEnv',
+    # More arguments here
+)
 
 
 # Erle-Copter envs

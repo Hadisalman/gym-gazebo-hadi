@@ -210,7 +210,7 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
                 self.dqn2.backward(onestep_reward, terminal=is_done)
 
             ## checkfor maze limits --> finish episode if out of limits
-            if (current_state.pose.position.y < -3.0) || (current_state.pose.position.x < -9):
+            if (current_state.pose.position.y < -3.0) or (current_state.pose.position.x < -9):
                 is_done=True
  
 

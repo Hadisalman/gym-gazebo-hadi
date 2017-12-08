@@ -52,6 +52,9 @@ from rl.memory import SequentialMemory
 from rl.core import Processor
 from rl.callbacks import FileLogger, ModelIntervalCheckpoint, tensorboardLogger
 
+import getModelStates
+
+
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 4
 nb_actions = 2 #env.action_space.n
@@ -180,6 +183,15 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         k=0
         # For how many ever steps the low level policy is to be executed
         while not(is_done) and (k<number_steps):
+            meta_action=0
+
+            current_state = getModelStates.gms_client('mobile_base','world')
+
+            if (current_state.pose.position.y > 7.0):
+                meta_action=1
+            if (current_state.pose.position.y > 7.0 and current_state.pose.position.x<-1):
+                meta_action=0
+                
             print("Meta action:",meta_action)
             if meta_action==0:
                 # lowlevel_action = np.argmax(self.model1.predict(self.frame_buffer.reshape(1,4,84,84)))
@@ -197,10 +209,10 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
                 # observation = deepcopy(observation)
                 self.dqn2.backward(onestep_reward, terminal=is_done)
 
-            print("Low level",lowlevel_action)
+            # print("Low level",lowlevel_action)
 
             
-            print("IS IT DONE?", is_done)
+            # print("IS IT DONE?", is_done)
             # Adding the one step reward to the cummulative_reward.
             cummulative_reward += onestep_reward
             k+=1

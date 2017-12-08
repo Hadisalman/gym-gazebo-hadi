@@ -74,7 +74,7 @@ args = parser.parse_args()
 env = gym.make('MetaGazeboEnviTurtlebotCameraNnEnv-v0')
 
 initial_state = env.reset()
-embed()
+# embed()
 
 np.random.seed(123)
 env.seed(123)

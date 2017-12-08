@@ -77,14 +77,32 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         self.img_rows = 84
         self.img_cols = 84
         self.img_channels = 1
+        self.initial_angles = [np.pi/2,np.pi/2]
 
         
-        self.weight_file_1 = ''
-        self.weight_file_2 = ''
+        self.weight_file_1 = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/weights_to_use_DL/path1.h5f'
+        self.weight_file_2 = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/weights_to_use_DL/path2.h5f'
+        
+        memory = SequentialMemory(limit=100000, window_length=WINDOW_LENGTH)
+        policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, value_min=.1, value_test=.05,
+                              nb_steps=100000)
 
         self.model1 = self.create_model(self.weight_file_1)
         self.model2 = self.create_model(self.weight_file_2)
+        
+        self.dqn1 = DQNAgent(self.model1, nb_actions=3, policy=policy, memory=memory,
+                nb_steps_warmup=10000, gamma=.99, target_model_update=1000,
+               enable_dueling_network=True, dueling_type='avg', train_interval=4)
+        self.dqn2 = DQNAgent(self.model2, nb_actions=3, policy=policy, memory=memory,
+                nb_steps_warmup=10000, gamma=.99, target_model_update=1000,
+               enable_dueling_network=True, dueling_type='avg', train_interval=4)
+        
+        self.dqn1.compile(Adam(lr=.00025), metrics=['mae'])
+        self.dqn2.compile(Adam(lr=.00025), metrics=['mae'])
 
+        self.dqn1.load_weights(self.weight_file_1)
+        self.dqn2.load_weights(self.weight_file_2)
+        
         self.current_state = 0
 
         self.frame_buffer = np.zeros((WINDOW_LENGTH,self.img_rows,self.img_cols))
@@ -113,12 +131,13 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         model.add(Flatten())
         model.add(Dense(512))
         model.add(Activation('relu'))
+        nb_actions = 3
         model.add(Dense(nb_actions))
         model.add(Activation('linear'))
 
         # model.compile(RMSprop(lr=.000025), loss)
-        if not(weight_file==''):
-            model.load_weights(weight_file)            
+        # if not(weight_file==''):
+        #     model.load_weights(weight_file)            
         
         return model
 
@@ -161,21 +180,33 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         k=0
         # For how many ever steps the low level policy is to be executed
         while not(is_done) and (k<number_steps):
-
             print("Meta action:",meta_action)
             if meta_action==0:
-                lowlevel_action = np.argmax(self.model1.predict(self.frame_buffer.reshape(1,4,84,84)))
+                # lowlevel_action = np.argmax(self.model1.predict(self.frame_buffer.reshape(1,4,84,84)))
+                lowlevel_action = self.dqn1.forward(self.current_state)
+                self.current_state, onestep_reward, is_done, _ = self.lowerlevel_step(lowlevel_action)
+                # observation, r, d, info = env.step(action)
+                # observation = deepcopy(observation)
+                self.dqn1.backward(onestep_reward, terminal=is_done)
+
             if meta_action==1:
-                lowlevel_action = np.argmax(self.model2.predict(self.frame_buffer.reshape(1,4,84,84)))
+                # lowlevel_action = np.argmax(self.model2.predict(self.frame_buffer.reshape(1,4,84,84)))
+                lowlevel_action = self.dqn2.forward(self.current_state)
+                self.current_state, onestep_reward, is_done, _ = self.lowerlevel_step(lowlevel_action)
+                # observation, r, d, info = env.step(action)
+                # observation = deepcopy(observation)
+                self.dqn2.backward(onestep_reward, terminal=is_done)
+
             print("Low level",lowlevel_action)
-            self.current_state, onestep_reward, is_done, _ = self.lowerlevel_step(lowlevel_action)
+
+            
             print("IS IT DONE?", is_done)
             # Adding the one step reward to the cummulative_reward.
             cummulative_reward += onestep_reward
             k+=1
                 
-        np.roll(self.frame_buffer,-1,axis=0)
-        self.frame_buffer[WINDOW_LENGTH-1] = copy.deepcopy(self.current_state)
+            np.roll(self.frame_buffer,-1,axis=0)
+            self.frame_buffer[WINDOW_LENGTH-1] = copy.deepcopy(self.current_state)
 
         return self.current_state, cummulative_reward, is_done, _
 
@@ -329,7 +360,7 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         try:
             #reset_proxy.call()
             self.reset_proxy()
-            self.setmodelstate(x=0,y=0,yaw=3.14*(self.episode%2))
+            self.setmodelstate(x=0,y=-2,yaw=self.initial_angles[self.episode%2])
 
         except rospy.ServiceException, e:
             print ("/gazebo/reset_simulation service call failed")

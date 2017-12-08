@@ -146,11 +146,8 @@ policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, valu
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
                 nb_steps_warmup=10000, gamma=.99, target_model_update=1000,
                enable_dueling_network=True, dueling_type='avg', train_interval=4)
-<<<<<<< HEAD
-dqn.compile(RMSprop(lr=.00025), metrics=['mae'])
-=======
+
 dqn.compile(Adam(lr=.00025), metrics=['mae'])
->>>>>>> 2a87aea3b56beaf47d1a2fd495f9f3109f41e67c
 
 log_parent_dir = './train_log'
 log_dir=''

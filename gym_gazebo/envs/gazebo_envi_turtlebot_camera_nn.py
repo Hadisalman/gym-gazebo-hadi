@@ -120,7 +120,8 @@ class GazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         done = self.calculate_observation(data)
 
         current_state = getModelStates.gms_client('mobile_base','world')
-        if (current_state.pose.position.y > 100.0):
+        # if (current_state.pose.position.y > 7.0):
+        if (current_state.pose.position.y > 7.0 and current_state.pose.position.x<-1):
             done = True
 
         image_data = None
@@ -229,6 +230,7 @@ class GazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
             self.reset_proxy()
             self.setmodelstate(x=4,y=7,yaw=self.initial_angles[self.episode%2])
             # self.setmodelstate(x=0,y=-2,yaw=self.initial_angles[self.episode%2])
+            # self.setmodelstate(x=1,y=12,yaw=3.14)
 
         except rospy.ServiceException, e:
             print ("/gazebo/reset_simulation service call failed")

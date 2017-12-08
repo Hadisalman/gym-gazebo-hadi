@@ -65,13 +65,13 @@ save_dir = '/home/tanmay/Research/Code/RosGazeboSetup/gym-gazebo/examples/turtle
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
-parser.add_argument('--env-name', type=str, default='GazeboEnviTurtlebotCameraNnEnv-v0')
+parser.add_argument('--env-name', type=str, default='MetaGazeboEnviTurtlebotCameraNnEnv-v0')
 parser.add_argument('--weights', type=str, default=save_dir+'900000.h5f')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
 # env = gym.make(args.env_name)
-env = gym.make('MetaGazeboEnviTurtlebotCameraNnEnv-v0')
+env = gym.make(args.env_name)
 
 initial_state = env.reset()
 # embed()

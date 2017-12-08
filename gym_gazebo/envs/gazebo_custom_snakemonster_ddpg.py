@@ -52,7 +52,8 @@ no_of_joints = 18	#18 DOF robot
 #The coming variables are mainly for code to work to initialize arrays
 no_of_torque_directions = 6
 no_legs = 6
-leg_contact_threshold = 0.027
+#leg_contact_threshold = 0.027
+leg_contact_threshold = 0.0755 #increased threshold for asphalt -_-
 state_dim = 203
 action_dimension = 18
 lol = 0

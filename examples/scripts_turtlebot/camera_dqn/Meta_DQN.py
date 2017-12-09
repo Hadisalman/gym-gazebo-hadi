@@ -61,12 +61,12 @@ K.set_session(sess)
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 1
 
-save_dir = '/home/tanmay/Research/Code/RosGazeboSetup/gym-gazebo/examples/turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/best_weights/'
+save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/MetaGazeboEnviTurtlebotCameraNnEnv-v0/2017-12-08_03-55-18/'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
 parser.add_argument('--env-name', type=str, default='MetaGazeboEnviTurtlebotCameraNnEnv-v0')
-parser.add_argument('--weights', type=str, default=save_dir+'900000.h5f')
+parser.add_argument('--weights', type=str, default=save_dir+'30000.h5f')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
@@ -131,9 +131,9 @@ policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., valu
 # Feel free to give it a try!
 
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
-                nb_steps_warmup=50000, gamma=.99, target_model_update=10000,
+                nb_steps_warmup=10000, gamma=.99, target_model_update=5000,
                enable_dueling_network=True, dueling_type='avg', train_interval=4)
-dqn.compile(RMSprop(lr=.000025), metrics=['mae'])
+dqn.compile(RMSprop(lr=.00025), metrics=['mae'])
 
 log_parent_dir = './train_log'
 log_dir=''
@@ -159,13 +159,12 @@ if args.mode == 'train':
     # can be prematurely aborted. Notice that you can the built-in Keras callbacks!
     weights_filename =os.path.join(log_dir, 'weights','dqn_{}_weights.h5f'.format(args.env_name))
     checkpoint_weights_filename = os.path.join(log_dir, '{step}.h5f')
-    callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=50000)]
+    callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=5000)]
     
     # log_filename = 'dqn_{}_log.json'.format(args.env_name)
     # callbacks += [FileLogger(log_filename, interval=100)]
     
     callbacks += [tensorboardLogger(log_dir)]
-
 
     # weights_filename = args.weights
     # dqn.load_weights(weights_filename)  
@@ -184,5 +183,8 @@ elif args.mode == 'test':
     if args.weights:
         weights_filename = args.weights
     dqn.load_weights(weights_filename)
-    dqn.test(env, nb_episodes=100, visualize=False)
+    dqn.test(env, nb_episodes=10, visualize=False)
+    embed()
+    print(np.mean(env.episode_reward_array))
+
 

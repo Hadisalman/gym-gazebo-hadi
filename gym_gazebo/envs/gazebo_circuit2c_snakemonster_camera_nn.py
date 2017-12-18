@@ -373,7 +373,7 @@ class GazeboCircuit2cSnakeMonsterCameraNnEnv(gazebo_env.GazeboEnv):
             if action == 0:
                 reward = 5
             else:
-                reward = 0.00
+                reward = -2
         else:
             reward = -200
         #print("detour= "+str(center_detour)+" :: reward= "+str(reward)+" ::action="+str(action))

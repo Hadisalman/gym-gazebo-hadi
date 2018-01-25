@@ -82,9 +82,9 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         self.img_channels = 1
         self.initial_angles = [np.pi/2,np.pi/2]
 
-        
-        self.weight_file_1 = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/weights_to_use_DL/path1.h5f'
-        self.weight_file_2 = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/weights_to_use_DL/path2.h5f'
+        currentPath = os.getcwd()
+        self.weight_file_1 = currentPath + '/weights_to_use_DL/path1.h5f'
+        self.weight_file_2 = currentPath + '/weights_to_use_DL/path2.h5f'
         
         memory = SequentialMemory(limit=100000, window_length=WINDOW_LENGTH)
         policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, value_min=.1, value_test=.05,

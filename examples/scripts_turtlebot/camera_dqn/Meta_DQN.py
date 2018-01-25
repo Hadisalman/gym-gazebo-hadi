@@ -61,10 +61,11 @@ K.set_session(sess)
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 1
 
-save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/MetaGazeboEnviTurtlebotCameraNnEnv-v0/2017-12-08_03-55-18/'
+currentPath = os.getcwd()
+save_dir = currentPath + '/train_log/MetaGazeboEnviTurtlebotCameraNnEnv-v0/2017-12-08_03-55-18/'
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--mode', choices=['train', 'test'], default='train')
+parser.add_argument('--mode', type=str, default='train')
 parser.add_argument('--env-name', type=str, default='MetaGazeboEnviTurtlebotCameraNnEnv-v0')
 parser.add_argument('--weights', type=str, default=save_dir+'30000.h5f')
 args = parser.parse_args()

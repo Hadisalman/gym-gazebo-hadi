@@ -131,7 +131,7 @@ policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., valu
 # Feel free to give it a try!
 
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
-                nb_steps_warmup=50000, gamma=.99, target_model_update=10000,
+                nb_steps_warmup=10000, gamma=.99, target_model_update=5000,
                enable_dueling_network=True, dueling_type='avg', train_interval=4)
 dqn.compile(RMSprop(lr=.000025), metrics=['mae'])
 
@@ -159,7 +159,7 @@ if args.mode == 'train':
     # can be prematurely aborted. Notice that you can the built-in Keras callbacks!
     weights_filename =os.path.join(log_dir, 'weights','dqn_{}_weights.h5f'.format(args.env_name))
     checkpoint_weights_filename = os.path.join(log_dir, '{step}.h5f')
-    callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=50000)]
+    callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=5000)]
     
     # log_filename = 'dqn_{}_log.json'.format(args.env_name)
     # callbacks += [FileLogger(log_filename, interval=100)]

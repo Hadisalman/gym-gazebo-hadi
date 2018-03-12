@@ -83,8 +83,8 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         self.initial_angles = [np.pi/2,np.pi/2]
 
         
-        self.weight_file_1 = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/weights_to_use_DL/path1.h5f'
-        self.weight_file_2 = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/weights_to_use_DL/path2.h5f'
+        self.weight_file_1 = '/home/hadis/Hadi/Reinforcement_Learning/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/weights_to_use_DL/path1.h5f'
+        self.weight_file_2 = '/home/hadis/Hadi/Reinforcement_Learning/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/weights_to_use_DL/path2.h5f'
         
         memory = SequentialMemory(limit=100000, window_length=WINDOW_LENGTH)
         policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, value_min=.1, value_test=.05,
@@ -177,7 +177,7 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
     def _step(self, meta_action):
         # embed()
         print("CALLING META STEP")
-        number_steps = 5
+        number_steps = 50
         is_done = False
         cummulative_reward = 0.        
         k=0

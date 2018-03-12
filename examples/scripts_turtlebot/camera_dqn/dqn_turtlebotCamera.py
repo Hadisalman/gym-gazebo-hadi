@@ -63,11 +63,13 @@ WINDOW_LENGTH = 4
 
 save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/weights_to_use_DL/'
 # save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboEnviTurtlebotCameraNnEnv-v0/2017-12-07_22-24-54/'
+save_dir = '/home/hadis/Hadi/Reinforcement_Learning/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/best_weights/'
+
 # 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
-parser.add_argument('--env-name', type=str, default='GazeboEnviTurtlebotCameraNnEnv-v0')
-parser.add_argument('--weights', type=str, default=save_dir+'path1.h5f')
+parser.add_argument('--env-name', type=str, default='GazeboCircuit2cTurtlebotCameraNnEnv-v0')
+parser.add_argument('--weights', type=str, default=save_dir+'900000.h5f')
 
 args = parser.parse_args()
 

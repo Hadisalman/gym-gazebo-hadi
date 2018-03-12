@@ -58,10 +58,15 @@ config.gpu_options.per_process_gpu_memory_fraction = 1
 sess = tf.Session(config=config)
 K.set_session(sess)
 
+save_dir = 'dqn_lidar_weights/'
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
 parser.add_argument('--env-name', type=str, default='GazeboCircuit2TurtlebotLidarNn-v0')
-parser.add_argument('--weights', type=str, default='dqn_lidar_weights/dqn_GazeboCircuit2TurtlebotLidarNn-v0_weights_3000000.h5f')
+parser.add_argument('--continue-training', action='store_true', 
+        help='Flag whether to load check point and continue training')
+parser.add_argument('--weights', type=str, default=save_dir+'dqn_GazeboCircuit2TurtlebotLidarNn-v0_weights_3000000.h5f',
+        help='Weights file to use during training (with --continue-training flag on) or during testing')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
@@ -118,30 +123,44 @@ dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
                enable_dueling_network=True, dueling_type='avg', train_interval=4, delta_clip=1.)
 dqn.compile(Adam(lr=.00025), metrics=['mae'])
 
-if args.mode == 'train':
-    # Okay, now it's time to learn something! We capture the interrupt exception so that training
-    # can be prematurely aborted. Notice that you can the built-in Keras callbacks!
-    weights_filename = 'dqn_{}_weights.h5f'.format(args.env_name)
-    checkpoint_weights_filename = 'dqn_' + args.env_name + '_weights_{step}.h5f'
-    log_filename = 'dqn_{}_log.json'.format(args.env_name)
-    callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=50000)]
-    callbacks += [FileLogger(log_filename, interval=100)]
+log_parent_dir = './train_log'
 
-    #weights_filename = args.weights
-    #dqn.load_weights(weights_filename)    
-    
+def make_log_dir():
+    import datetime, os
+    current_timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    log_dir = os.path.join(log_parent_dir, args.env_name, current_timestamp)
+    os.makedirs(log_dir)
+    return log_dir
+
+if args.mode == 'train':
+    log_dir = make_log_dir()     
+
+    checkpoint_weights_filename = os.path.join(log_dir, '{step}.h5f')
+    callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=50000)]
+    callbacks += [tensorboardLogger(log_dir)]
+
+    # log_filename = 'dqn_{}_log.json'.format(args.env_name)
+    # callbacks += [FileLogger(log_filename, interval=100)]
+
+    if args.continue_training:
+        weights_filename = args.weights
+        dqn.load_weights(weights_filename)  
+
     dqn.fit(env, callbacks=callbacks, nb_steps=3000000, log_interval=10000)
 
     # After training is done, we save the final weights one more time.
-    # dqn.save_weights(weights_filename, overwrite=True)
+    weights_filename =os.path.join(log_dir, 'weights','dqn_{}_weights.h5f'.format(args.env_name))
+    dqn.save_weights(log_dir+'', overwrite=True)
     
     # Finally, evaluate our algorithm for 10 episodes.
     dqn.test(env, nb_episodes=10, visualize=False)
 
 elif args.mode == 'test':
-    weights_filename = 'dqn_{}_weights.h5f'.format(args.env_name)
+
     if args.weights:
         weights_filename = args.weights
+    else:
+        raise "Please specify the path to the weights file"
     dqn.load_weights(weights_filename)
     dqn.test(env, nb_episodes=10, visualize=False)
 

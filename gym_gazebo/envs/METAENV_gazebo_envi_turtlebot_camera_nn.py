@@ -105,9 +105,12 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
 
         self.dqn1.load_weights(self.weight_file_1)
         self.dqn2.load_weights(self.weight_file_2)
-        
+        self.episode_reward_array = []
+        self.episode_reward=0
+        self.current_episode = []
+        self.activation_history = []
         self.current_state = 0
-        self.hand_crafte_policy = False
+        self.hand_crafte_policy = True
         self.frame_buffer = np.zeros((WINDOW_LENGTH,self.img_rows,self.img_cols))
 # Set up the code for: 
     # Tensorboard Which policy is active
@@ -177,7 +180,7 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
     def _step(self, meta_action):
         # embed()
         print("CALLING META STEP")
-        number_steps = 50
+        number_steps = 25
         is_done = False
         cummulative_reward = 0.        
         k=0
@@ -209,9 +212,13 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
                 # observation = deepcopy(observation)
                 self.dqn2.backward(onestep_reward, terminal=is_done)
 
+            self.current_episode.append([current_state.pose.position.x,current_state.pose.position.y,meta_action])
+
+            self.episode_reward+= onestep_reward
             ## checkfor maze limits --> finish episode if out of limits
             if (current_state.pose.position.y < -3.0) or (current_state.pose.position.x < -9):
                 is_done=True
+
  
 
             # print("Low level",lowlevel_action)
@@ -223,6 +230,10 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
                 
             np.roll(self.frame_buffer,-1,axis=0)
             self.frame_buffer[WINDOW_LENGTH-1] = copy.deepcopy(self.current_state)
+
+        if is_done:
+            self.episode_reward_array.append(self.episode_reward)
+            self.episode_reward=0
 
         return self.current_state, cummulative_reward, is_done, _
 
@@ -369,6 +380,11 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         #return self.s_t, reward, done, {} # observation, reward, done, info
 
     def _reset(self):
+
+        #SAvinf previous episode
+        self.activation_history.append(self.current_episode)
+        np.save("Activation_History.npy",self.activation_history)
+        self.current_episode = []
         self.episode +=1 
         self.last50actions = [0] * 50 #used for looping avoidance
         # Resets the state of the environment and returns an initial observation.
@@ -437,3 +453,15 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         #self.s_t = np.stack((cv_image, cv_image, cv_image, cv_image), axis=0)
         #self.s_t = self.s_t.reshape(1, self.s_t.shape[0], self.s_t.shape[1], self.s_t.shape[2])
         #return self.s_t
+
+# In [1]: #fig = plt.figure()
+#    ...: #ax = fig.gca(projection='3d')
+#    ...: #ax.set_zlim([0.,10.])
+#    ...: for i in range(2,len(hist)):
+#    ...:     eps = npy.array(hist[i])               
+#    ...:     plt.scatter(eps[:,0],eps[:,1],c=eps[:,2],s=60,vmin=0.3,vmax=2,edgecolor='')
+#    ...:     #ax.scatter3D(eps[:,0],eps[:,1],0.,c=eps[:,2],s=60,vmin=0.3,vmax=2,edgecolor=None)
+#    ...: plt.xlabel("X Axis")          
+#    ...: plt.ylabel("Y Axis")                    
+#    ...: plt.title("Plot of policy activations over space.")
+#    ...: plt.show() 

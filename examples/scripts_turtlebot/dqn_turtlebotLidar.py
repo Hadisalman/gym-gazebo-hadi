@@ -62,7 +62,7 @@ K.set_session(sess)
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
 parser.add_argument('--env-name', type=str, default='GazeboCircuit2TurtlebotLidarNn-v0')
-parser.add_argument('--weights', type=str, default='dqn_GazeboCircuit2TurtlebotLidarNn-v0_weights_3000000.h5f')
+parser.add_argument('--weights', type=str, default='dqn_lidar_weights/dqn_GazeboCircuit2TurtlebotLidarNn-v0_weights_3000000.h5f')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.

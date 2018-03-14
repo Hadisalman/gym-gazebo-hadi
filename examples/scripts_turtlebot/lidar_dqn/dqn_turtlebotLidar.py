@@ -163,7 +163,3 @@ elif args.mode == 'test':
         raise "Please specify the path to the weights file"
     dqn.load_weights(weights_filename)
     dqn.test(env, nb_episodes=10, visualize=False)
-
-
-
-

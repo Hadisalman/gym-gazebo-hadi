@@ -99,6 +99,7 @@ elif K.image_dim_ordering() == 'th':
     model.add(Permute((1, 2, 3), input_shape=input_shape))
 else:
     raise RuntimeError('Unknown image_dim_ordering.')
+
 model.add(Convolution2D(32, 8, 8, subsample=(4, 4), input_shape=input_shape))
 model.add(Activation('relu'))
 model.add(Convolution2D(64, 4, 4, subsample=(2, 2)))
@@ -169,5 +170,3 @@ elif args.mode == 'test':
     dqn.test(env, nb_episodes=10, visualize=False)
     embed()
     print(np.mean(env.episode_reward_array))
-
-

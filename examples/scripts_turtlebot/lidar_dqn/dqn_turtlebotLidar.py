@@ -62,7 +62,7 @@ save_dir = 'dqn_lidar_weights/'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
-parser.add_argument('--env-name', type=str, default='GazeboCircuit2TurtlebotLidarNn-v0')
+parser.add_argument('--env-name', type=str, default='GazeboMax1TurtlebotLidar-v0')
 parser.add_argument('--continue-training', action='store_true', 
         help='Flag whether to load check point and continue training')
 parser.add_argument('--weights', type=str, default=save_dir+'dqn_GazeboCircuit2TurtlebotLidarNn-v0_weights_3000000.h5f',
@@ -70,9 +70,7 @@ parser.add_argument('--weights', type=str, default=save_dir+'dqn_GazeboCircuit2T
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
-# env = gym.make(args.env_name)
-env = gym.make('GazeboCircuit2TurtlebotLidarNn-v0')
-
+env = gym.make(args.env_name)
 np.random.seed(123)
 env.seed(123)
 
@@ -146,11 +144,11 @@ if args.mode == 'train':
         weights_filename = args.weights
         dqn.load_weights(weights_filename)  
 
-    dqn.fit(env, callbacks=callbacks, nb_steps=3000000, log_interval=10000)
+    dqn.fit(env, callbacks=callbacks, nb_steps=300000, log_interval=10000)
 
     # After training is done, we save the final weights one more time.
-    weights_filename =os.path.join(log_dir, 'weights','dqn_{}_weights.h5f'.format(args.env_name))
-    dqn.save_weights(log_dir+'', overwrite=True)
+    weights_filename =os.path.join(log_dir, 'dqn_{}_weights.h5f'.format(args.env_name))
+    dqn.save_weights(weights_filename, overwrite=True)
     
     # Finally, evaluate our algorithm for 10 episodes.
     dqn.test(env, nb_episodes=10, visualize=False)

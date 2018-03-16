@@ -8,6 +8,12 @@ from gym_gazebo.envs.gazebo_circuit2_turtlebot_lidar_nn import GazeboCircuit2Tur
 from gym_gazebo.envs.gazebo_circuit2c_turtlebot_camera_nn import GazeboCircuit2cTurtlebotCameraNnEnv
 from gym_gazebo.envs.gazebo_round_turtlebot_lidar import GazeboRoundTurtlebotLidarEnv
 
+# Dynamic environment task
+from gym_gazebo.envs.gazebo_max1_turtlebot_lidar import GazeboMax1TurtlebotLidarEnv
+from gym_gazebo.envs.gazebo_max2_turtlebot_lidar import GazeboMax2TurtlebotLidarEnv
+from gym_gazebo.envs.gazebo_max3_turtlebot_lidar import GazeboMax3TurtlebotLidarEnv
+from gym_gazebo.envs.METAENV_gazebo_envi_turtlebot_lidar import MetaGazeboEnviTurtlebotLidarEnv
+
 # Deep learrning project
 from gym_gazebo.envs.gazebo_path1_turtlebot_camera_nn import GazeboPath1TurtlebotCameraNnEnv
 from gym_gazebo.envs.gazebo_path2_turtlebot_camera_nn import GazeboPath2TurtlebotCameraNnEnv

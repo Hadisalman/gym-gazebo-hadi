@@ -9,7 +9,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import qlearn
 #import liveplot
-
+from IPython import embed
 def render():
     render_skip = 0 #Skip first X episodes.
     render_interval = 50 #Show render Every Y episodes.
@@ -22,12 +22,12 @@ def render():
 
 if __name__ == '__main__':
 
-    env = gym.make('GazeboSnakeLidar-v0')
+    env = gym.make('GazeboCircuit2SnakeMonsterLidar-v0')
 
     outdir = '/tmp/gazebo_gym_experiments'
     #env.monitor.start(outdir, force=True, seed=None)
     env = gym.wrappers.Monitor(env, directory=outdir, force=True, write_upon_reset=True)
-
+    embed()
     #plotter = LivePlot(outdir)
 
     last_time_steps = numpy.ndarray(0)

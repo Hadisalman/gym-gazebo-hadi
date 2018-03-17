@@ -58,14 +58,14 @@ config.gpu_options.per_process_gpu_memory_fraction = 1
 sess = tf.Session(config=config)
 K.set_session(sess)
 
-save_dir = 'dqn_lidar_weights/'
+save_dir = '/home/i/lidar_dqn/'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
 parser.add_argument('--env-name', type=str, default='GazeboMax1TurtlebotLidar-v0')
-parser.add_argument('--continue-training', action='store_true', 
+parser.add_argument('--continue_training', action='store_true', 
         help='Flag whether to load check point and continue training')
-parser.add_argument('--weights', type=str, default=save_dir+'dqn_GazeboCircuit2TurtlebotLidarNn-v0_weights_3000000.h5f',
+parser.add_argument('--weights', type=str, default=save_dir+'FAST.h5f',
         help='Weights file to use during training (with --continue-training flag on) or during testing')
 args = parser.parse_args()
 
@@ -84,7 +84,7 @@ WINDOW_LENGTH=1
 # embed()
 
 model = Sequential()
-model.add(Flatten(input_shape=(1,) + env.observation_space.shape))
+model.add(Flatten(input_shape=(WINDOW_LENGTH1,) + env.observation_space.shape))
 model.add(Dense(512))
 model.add(Activation('relu'))
 model.add(Dense(100))
@@ -107,7 +107,7 @@ memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
 # the agent initially explores the environment (high eps) and then gradually sticks to what it knows
 # (low eps). We also set a dedicated eps value that is used during testing. Note that we set it to 0.05
 # so that the agent still performs some random actions. This ensures that the agent cannot get stuck.
-policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., value_min=.1, value_test=.00,
+policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, value_min=.1, value_test=.00,
                               nb_steps=100000)
 
 # The trade-off between exploration and exploitation is difficult and an on-going research topic.
@@ -134,17 +134,20 @@ if args.mode == 'train':
     log_dir = make_log_dir()     
 
     checkpoint_weights_filename = os.path.join(log_dir, '{step}.h5f')
-    callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=50000)]
+    callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=10000)]
     callbacks += [tensorboardLogger(log_dir)]
 
     # log_filename = 'dqn_{}_log.json'.format(args.env_name)
     # callbacks += [FileLogger(log_filename, interval=100)]
 
     if args.continue_training:
+        print ("==========================================")
+        print ("=           Load parameters              =")
+        print ("==========================================")        
         weights_filename = args.weights
         dqn.load_weights(weights_filename)  
 
-    dqn.fit(env, callbacks=callbacks, nb_steps=300000, log_interval=10000)
+    dqn.fit(env, callbacks=callbacks, nb_steps=100000, log_interval=10000)
 
     # After training is done, we save the final weights one more time.
     weights_filename =os.path.join(log_dir, 'dqn_{}_weights.h5f'.format(args.env_name))

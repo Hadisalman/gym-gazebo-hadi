@@ -10,6 +10,10 @@ from geometry_msgs.msg import Twist
 from std_srvs.srv import Empty
 from sensor_msgs.msg import LaserScan
 from gym.utils import seeding
+import roslib; roslib.load_manifest('gazebo_ros')
+from gazebo_msgs.msg import ModelState
+import getModelStates
+from tf.transformations import quaternion_from_euler
 
 class GazeboMax1TurtlebotLidarEnv(gazebo_env.GazeboEnv):
 
@@ -21,10 +25,12 @@ class GazeboMax1TurtlebotLidarEnv(gazebo_env.GazeboEnv):
         self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
         self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
         self.action_space = spaces.Discrete(3) #F,L,R
+        self.state_pub = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=1)
 
         self.reward_range = (-np.inf, np.inf)
         self.observation_space = spaces.Box(-0, 7,(20,))
         self._seed()
+        self.initial_angles = [0, np.pi/2, np.pi, 3.0*np.pi/4]
 
     def calculate_observation(self,data):
         min_range = 0.2
@@ -32,11 +38,29 @@ class GazeboMax1TurtlebotLidarEnv(gazebo_env.GazeboEnv):
         for i, item in enumerate(data.ranges):
             if (min_range > data.ranges[i] > 0):
                 done = True
-        return data.ranges,done
+        return data.ranges, done
 
     def _seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
+
+    def setmodelstate(self, modelname='mobile_base',x=0,y=0,yaw=0):
+        # rospy.init_node('ali')    
+        state=ModelState()
+        state.model_name = modelname
+        state.pose.position.x=x
+        state.pose.position.y=y
+        
+        # yaw = np.pi/2
+        q = quaternion_from_euler(0,0,yaw)
+
+        state.pose.orientation.x = q[0]
+        state.pose.orientation.y = q[1]
+        state.pose.orientation.z = q[2]
+        state.pose.orientation.w = q[3]
+
+        self.state_pub.publish(state)
+
 
     def _step(self, action):
         rospy.wait_for_service('/gazebo/unpause_physics')
@@ -62,14 +86,14 @@ class GazeboMax1TurtlebotLidarEnv(gazebo_env.GazeboEnv):
         elif action == 1: #LEFT
             vel_cmd = Twist()
             
-            vel_cmd.linear.x = 0.05
+            vel_cmd.linear.x = 0.1
             vel_cmd.angular.z = 0.3
            
             self.vel_pub.publish(vel_cmd)
         elif action == 2: #RIGHT
             vel_cmd = Twist()
            
-            vel_cmd.linear.x = 0.05
+            vel_cmd.linear.x = 0.1
             vel_cmd.angular.z = -0.3
             
             self.vel_pub.publish(vel_cmd)
@@ -100,7 +124,7 @@ class GazeboMax1TurtlebotLidarEnv(gazebo_env.GazeboEnv):
             if action == 0:
                 reward = 5
             else:
-                reward = 1
+                reward = 0
         else:
             reward = -200
 
@@ -113,6 +137,8 @@ class GazeboMax1TurtlebotLidarEnv(gazebo_env.GazeboEnv):
         try:
             #reset_proxy.call()
             self.reset_proxy()
+            self.setmodelstate(x=0,y=0,yaw=self.initial_angles[np.random.choice(4)])
+
         except rospy.ServiceException, e:
             print ("/gazebo/reset_simulation service call failed")
 

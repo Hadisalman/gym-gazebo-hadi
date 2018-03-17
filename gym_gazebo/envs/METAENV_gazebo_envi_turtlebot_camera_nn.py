@@ -112,11 +112,11 @@ class MetaGazeboEnviTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
         self.current_state = 0
         self.hand_crafte_policy = True
         self.frame_buffer = np.zeros((WINDOW_LENGTH,self.img_rows,self.img_cols))
-# Set up the code for: 
+
+    # Set up the code for: 
     # Tensorboard Which policy is active
     # Supervision
-    # Running ground truth policy.     
-
+    # Running ground truth policy.
     def create_model(self, weight_file):
         input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
         model = Sequential()

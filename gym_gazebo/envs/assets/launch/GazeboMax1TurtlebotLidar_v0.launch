@@ -16,8 +16,6 @@
   </include-->
 
   <include file="$(find dynamic_env)/launch/env.launch"/>
-
-
   
   <include file="$(find turtlebot_gazebo)/launch/includes/$(arg base).launch.xml">
     <arg name="base" value="$(arg base)"/>

@@ -65,6 +65,12 @@ else
   bash -c 'sed "s,GYM_GAZEBO_WORLD_ENVI=[^;]*,'GYM_GAZEBO_WORLD_ENVI=`pwd`/../assets/worlds/envi.world'," -i ~/.bashrc'
 fi
 
+if [ -z "$GYM_GAZEBO_WORLD_BOX" ]; then
+  bash -c 'echo "export GYM_GAZEBO_WORLD_BOX="`pwd`/../assets/worlds/box.world >> ~/.bashrc'
+else
+  bash -c 'sed "s,GYM_GAZEBO_WORLD_BOX=[^;]*,'GYM_GAZEBO_WORLD_BOX=`pwd`/../assets/worlds/box.world'," -i ~/.bashrc'
+fi
+
 #copy altered urdf model
 cp -r ../assets/urdf/kobuki_urdf/urdf/ catkin_ws/src/kobuki/kobuki_description
 

@@ -86,3 +86,14 @@ register(
     entry_point='gym_gazebo.envs:GazeboCircuit2cSnakeMonsterCameraNnEnv',
     # More arguments here
 )
+register(
+    id='GazeboEmptySnakeMonsterCameraNnEnv-v0',
+    entry_point='gym_gazebo.envs:GazeboEmptySnakeMonsterCameraNnEnv',
+    # More arguments here
+)
+
+register(
+    id='GazeboBoxSnakeMonsterCameraNnEnv-v0',
+    entry_point='gym_gazebo.envs:GazeboBoxSnakeMonsterCameraNnEnv',
+    # More arguments here
+)

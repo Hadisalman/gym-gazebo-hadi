@@ -61,13 +61,15 @@ K.set_session(sess)
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 4
 
-save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cSnakeMonsterCameraNnEnv-v0/2017-12-05_18-29-23'
+save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboBoxSnakeMonsterCameraNnEnv-v0/2017-12-05_18-29-23'
 # save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/best_weights/'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
-parser.add_argument('--env-name', type=str, default='GazeboCircuit2cSnakeMonsterCameraNnEnv-v0')
+parser.add_argument('--env-name', type=str, default='GazeboBoxSnakeMonsterCameraNnEnv-v0')
 parser.add_argument('--weights', type=str, default=save_dir+'/100000.h5f')
+parser.add_argument('--continue_training', action='store_true', 
+        help='Flag whether to load check point and continue training')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
@@ -77,8 +79,8 @@ env = gym.make(args.env_name)
 np.random.seed(123)
 env.seed(123)
 #TODO modify the turtlebot environment so that it accomodates with gym environments (action_space ...)
-nb_actions = 3 #env.action_space.n
-
+nb_actions = 2 #env.action_space.n
+# embed()
 # Next, we build our model. We use the same model that was described by Mnih et al. (2015).
 input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
 
@@ -119,7 +121,7 @@ memory = SequentialMemory(limit=100000, window_length=WINDOW_LENGTH)
 # the agent initially explores the environment (high eps) and then gradually sticks to what it knows
 # (low eps). We also set a dedicated eps value that is used during testing. Note that we set it to 0.05
 # so that the agent still performs some random actions. This ensures that the agent cannot get stuck.
-policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, value_min=.1, value_test=.05,
+policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, value_min=.01, value_test=.05,
                               nb_steps=100000)
 
 # The trade-off between exploration and exploitation is difficult and an on-going research topic.
@@ -129,7 +131,7 @@ policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, valu
 # Feel free to give it a try!
 
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
-                nb_steps_warmup=10000, gamma=.99, target_model_update=5000,
+                nb_steps_warmup=100, gamma=.99, target_model_update=20,
                enable_dueling_network=True, dueling_type='avg', train_interval=4)
 dqn.compile(RMSprop(lr=.00025), metrics=['mae'])
 
@@ -155,9 +157,9 @@ if args.mode == 'train':
     log_dir = make_log_dir()
     # Okay, now it's time to learn something! We capture the interrupt exception so that training
     # can be prematurely aborted. Notice that you can the built-in Keras callbacks!
-    weights_filename =os.path.join(log_dir, 'weights','dqn_{}_weights.h5f'.format(args.env_name))
     checkpoint_weights_filename = os.path.join(log_dir, '{step}.h5f')
-    callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=10000)]
+    callbacks = [ModelIntervalCheckpoint(checkpoint_weights_filename, interval=100)]
+    
     
     # log_filename = 'dqn_{}_log.json'.format(args.env_name)
     # callbacks += [FileLogger(log_filename, interval=100)]
@@ -165,12 +167,14 @@ if args.mode == 'train':
     callbacks += [tensorboardLogger(log_dir)]
 
 
-    # weights_filename = args.weights
-    # dqn.load_weights(weights_filename)  
+    if args.continue_training:
+        weights_filename = args.weights
+        dqn.load_weights(weights_filename)  
 
-    dqn.fit(env, callbacks=callbacks, nb_steps=3000000, log_interval=10000, verbose=1)
+    dqn.fit(env, callbacks=callbacks, nb_steps=10000, log_interval=100, verbose=1)
 
     # After training is done, we save the final weights one more time.
+    weights_filename =os.path.join(log_dir, 'dqn_{}_weights.h5f'.format(args.env_name))
     dqn.save_weights(weights_filename, overwrite=True)
     
     # Finally, evaluate our algorithm for 10 episodes.
@@ -178,9 +182,11 @@ if args.mode == 'train':
 
 
 elif args.mode == 'test':
-    weights_filename = 'dqn_{}_weights.h5f'.format(args.env_name)
     if args.weights:
         weights_filename = args.weights
+    else:
+        raise "Please specify the path to the weights file"
     dqn.load_weights(weights_filename)
-    dqn.test(env, nb_episodes=100, visualize=False)
+    dqn.test(env, nb_episodes=10, visualize=True)
+    
 

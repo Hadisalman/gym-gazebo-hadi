@@ -65,7 +65,7 @@ class GazeboBoxSnakeMonsterCameraNnEnv(gazebo_env.GazeboEnv):
         self.img_rows = 84
         self.img_cols = 84
         self.img_channels = 1
-        self.endXPosition = -6.0
+        self.endXPosition = -6.5
         self.steps = 0
 
     def setmodelstate(self, modelname='robot',x=0,y=0,yaw=0):
@@ -174,7 +174,7 @@ class GazeboBoxSnakeMonsterCameraNnEnv(gazebo_env.GazeboEnv):
             's1Off': np.pi/3,
             's2Off': np.pi/16,
             't3Str': 0,
-            'stabilize': False,
+            'stabilize': True,
             #'isStance': np.zeros((1,6)),
             'dx': np.zeros((3,6)),
             'legs': np.zeros((1,18)),

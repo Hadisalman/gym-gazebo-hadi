@@ -117,23 +117,23 @@ memory = SequentialMemory(limit=100000, window_length=WINDOW_LENGTH)
 # processor = turtleBotProcessor()
 
 # Select a policy. We use eps-greedy action selection, which means that a random action is selected
-# with probability eps. We anneal eps from 1.0 to 0.1 over the course of 1M steps. This is done so that
+# with probability eps. We anneal eps from 0.5 to 0.1 over the course of 1000 steps. This is done so that
 # the agent initially explores the environment (high eps) and then gradually sticks to what it knows
 # (low eps). We also set a dedicated eps value that is used during testing. Note that we set it to 0.05
 # so that the agent still performs some random actions. This ensures that the agent cannot get stuck.
-policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, value_min=.01, value_test=.05,
-                              nb_steps=100000)
 
-# The trade-off between exploration and exploitation is difficult and an on-going research topic.
-# If you want, you can experiment with the parameters or use a different policy. Another popular one
-# is Boltzmann-style exploration:
-# policy = BoltzmannQPolicy(tau=1.)
-# Feel free to give it a try!
+# policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, value_min=.1, value_test=.05,
+#                               nb_steps=100000)
 
+
+policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, value_min=.05, value_test=.05,
+                              nb_steps=1e3)
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
-                nb_steps_warmup=100, gamma=.99, target_model_update=20,
+                nb_steps_warmup=100, gamma=1.00, target_model_update=20,
                enable_dueling_network=True, dueling_type='avg', train_interval=4)
-dqn.compile(RMSprop(lr=.00025), metrics=['mae'])
+
+# dqn.compile(RMSprop(lr=.00025), metrics=['mae'])
+dqn.compile(RMSprop(lr=.00025), metrics=['mse'])
 
 log_parent_dir = './train_log'
 log_dir=''

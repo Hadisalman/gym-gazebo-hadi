@@ -58,16 +58,14 @@ config.gpu_options.per_process_gpu_memory_fraction = 1
 sess = tf.Session(config=config)
 K.set_session(sess)
 
-INPUT_SHAPE = (84, 84)
-WINDOW_LENGTH = 1
 
 currentPath = os.getcwd()
-save_dir = currentPath + '/train_log/MetaGazeboEnviTurtlebotCameraNnEnv-v0/2017-12-08_03-55-18/'
+save_dir = currentPath + '/train_log/MetaGazeboEnviTurtlebotCameraNnEnv-v0/2017-12-08_03-55-18/30000.h5f'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', type=str, default='train')
 parser.add_argument('--env-name', type=str, default='MetaGazeboEnviTurtlebotLidarEnv-v0')
-parser.add_argument('--weights', type=str, default=save_dir+'30000.h5f')
+parser.add_argument('--weights', type=str, default=save_dir)
 parser.add_argument('--continue-training', action='store_true', 
                     help='Flag whether to load check point and continue training')
 args = parser.parse_args()
@@ -75,56 +73,57 @@ args = parser.parse_args()
 # Get the environment and extract the number of actions.
 # env = gym.make(args.env_name)
 env = gym.make(args.env_name)
-
-initial_state = env.reset()
-#embed()
-
 np.random.seed(123)
 env.seed(123)
+embed()
 #TODO modify the turtlebot environment so that it accomodates with gym environments (action_space ...)
-#nb_actions = 2 #env.action_space.n
-nb_actions = 3
-
+nb_actions = 2
+WINDOW_LENGTH=4
 # Next, we build our model. We use the same model that was described by Mnih et al. (2015).
-input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
+# input_shape = (WINDOW_LENGTH,) + INPUT_SHAPE
 
 # obs,reward,done,_ =env.step(0)
 # embed()
 
 model = Sequential()
-if K.image_dim_ordering() == 'tf':
-    # (width, height, channels)
-    model.add(Permute((2, 3, 1), input_shape=input_shape))
-elif K.image_dim_ordering() == 'th':
-    # (channels, width, height)
-    model.add(Permute((1, 2, 3), input_shape=input_shape))
-else:
-    raise RuntimeError('Unknown image_dim_ordering.')
-
-model.add(Convolution2D(32, 8, 8, subsample=(4, 4), input_shape=input_shape))
-model.add(Activation('relu'))
-model.add(Convolution2D(64, 4, 4, subsample=(2, 2)))
-model.add(Activation('relu'))
-model.add(Convolution2D(64, 3, 3, subsample=(1, 1)))
-model.add(Activation('relu'))
-model.add(Flatten())
+model.add(Flatten(input_shape=(WINDOW_LENGTH,) + env.observation_space.shape))
 model.add(Dense(512))
+model.add(Activation('relu'))
+model.add(Dense(100))
+model.add(Activation('relu'))
+model.add(Dense(50))
 model.add(Activation('relu'))
 model.add(Dense(nb_actions))
 model.add(Activation('linear'))
 print(model.summary())
 
+# Finally, we configure and compile our agent. You can use every built-in Keras optimizer and
+# even the metrics!
 memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
-policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=1., value_min=.1, value_test=.05,
-                              nb_steps=1000000)
+
+# class turtleBotProcessor(Processor):
+# processor = turtleBotProcessor()
+
+# Select a policy. We use eps-greedy action selection, which means that a random action is selected
+# with probability eps. We anneal eps from 1.0 to 0.1 over the course of 1M steps. This is done so that
+# the agent initially explores the environment (high eps) and then gradually sticks to what it knows
+# (low eps). We also set a dedicated eps value that is used during testing. Note that we set it to 0.05
+# so that the agent still performs some random actions. This ensures that the agent cannot get stuck.
+policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, value_min=.1, value_test=.00,
+                              nb_steps=100000)
+
+# The trade-off between exploration and exploitation is difficult and an on-going research topic.
+# If you want, you can experiment with the parameters or use a different policy. Another popular one
+# is Boltzmann-style exploration:
+# policy = BoltzmannQPolicy(tau=1.)
+# Feel free to give it a try!
 
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
-                nb_steps_warmup=10000, gamma=.99, target_model_update=5000,
-               enable_dueling_network=True, dueling_type='avg', train_interval=4)
-dqn.compile(RMSprop(lr=.00025), metrics=['mae'])
+                nb_steps_warmup=5000, gamma=.99, target_model_update=1000,
+               enable_dueling_network=True, dueling_type='avg', train_interval=4, delta_clip=1.)
+dqn.compile(Adam(lr=.00025), metrics=['mae'])
 
 log_parent_dir = './train_log'
-log_dir=''
 
 def make_log_dir():
     import datetime, os

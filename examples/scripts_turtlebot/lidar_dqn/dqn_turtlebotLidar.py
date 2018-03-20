@@ -58,21 +58,21 @@ config.gpu_options.per_process_gpu_memory_fraction = 1
 sess = tf.Session(config=config)
 K.set_session(sess)
 
-save_dir = '/home/i/lidar_dqn/train_log/GazeboMax1TurtlebotLidar-v0/2018-03-17_20-37-29/'
-
+save_dir = '/home/i/lidar_dqn/train_log/GazeboMax1TurtlebotLidar-v0/2018-03-17_20-37-29/30000.h5f'
+# save_dir = '/home/i/lidar_dqn/pretrained.h5f'
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
 parser.add_argument('--env-name', type=str, default='GazeboMax1TurtlebotLidar-v0')
 parser.add_argument('--continue_training', action='store_true', 
         help='Flag whether to load check point and continue training')
-parser.add_argument('--weights', type=str, default=save_dir+'30000.h5f',
+parser.add_argument('--weights', type=str, default=save_dir,
         help='Weights file to use during training (with --continue-training flag on) or during testing')
 args = parser.parse_args()
 
 # Get the environment and extract the number of actions.
 env = gym.make(args.env_name)
 np.random.seed(123)
-env.seed(123)
+env.seed(123)                             
 
 #TODO modify the turtlebot environment so that it accomodates with gym environments (action_space ...)
 nb_actions = env.action_space.n

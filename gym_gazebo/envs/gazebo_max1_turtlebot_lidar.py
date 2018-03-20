@@ -77,26 +77,19 @@ class GazeboMax1TurtlebotLidarEnv(gazebo_env.GazeboEnv):
         # vel_cmd.angular.z = ang_vel
         # self.vel_pub.publish(vel_cmd)
 
-        if action == 0: #FORWARD
-            vel_cmd = Twist()
-            
+        vel_cmd = Twist()
+        if action == 0: #FORWARD           
             vel_cmd.linear.x = 0.5
             vel_cmd.angular.z = 0.0
-            self.vel_pub.publish(vel_cmd)
-        elif action == 1: #LEFT
-            vel_cmd = Twist()
-            
+        elif action == 1: #LEFT           
             vel_cmd.linear.x = 0.1
             vel_cmd.angular.z = 0.7
            
-            self.vel_pub.publish(vel_cmd)
-        elif action == 2: #RIGHT
-            vel_cmd = Twist()
-           
+        elif action == 2: #RIGHT          
             vel_cmd.linear.x = 0.1
             vel_cmd.angular.z = -0.7
             
-            self.vel_pub.publish(vel_cmd)
+        self.vel_pub.publish(vel_cmd)
 
         data = None
         while data is None:

@@ -108,7 +108,7 @@ class MetaGazeboEnviTurtlebotLidarEnv(gazebo_env.GazeboEnv):
         self.episode_reward=0
         self.current_episode = []
         self.activation_history = []
-        self.hand_crafte_policy = True
+        self.hand_crafte_policy = False
         # self.frame_buffer = np.zeros((WINDOW_LENGTH, observation_scan))
 
     ######################################################################
@@ -171,9 +171,9 @@ class MetaGazeboEnviTurtlebotLidarEnv(gazebo_env.GazeboEnv):
         # For how many ever steps the low level policy is to be executed
         while not(is_done) and (k<number_steps):
             current_state = getModelStates.gms_client('mobile_base','world')
-            
+            self.pose = current_state
             if self.hand_crafte_policy:          
-                meta_action=1
+                meta_action=0
                 # if (current_state.pose.position.y > 7.0 and current_state.pose.position.x<-1):
                 #     meta_action=1
                 # if (current_state.pose.position.y > 7.0 and current_state.pose.position.x<-0.5):
@@ -197,8 +197,8 @@ class MetaGazeboEnviTurtlebotLidarEnv(gazebo_env.GazeboEnv):
                                          meta_action])
 
             self.episode_reward+= onestep_reward
-            # if (current_state.pose.position.y < -3.0) or (current_state.pose.position.x < -9):
-            #     is_done=True
+            if (current_state.pose.position.y < -6.0) or (current_state.pose.position.x < -19):
+                is_done=True
 
             # print("Low level",lowlevel_action)
             # print("IS IT DONE?", is_done)
@@ -273,8 +273,12 @@ class MetaGazeboEnviTurtlebotLidarEnv(gazebo_env.GazeboEnv):
         if not done:
             if action == 0:
                 reward = 5
+                if self.pose.pose.position.x > -5:
+                    reward += 2
+                if self.pose.pose.position.x <-7:
+                    reward -= 3
             else:
-                reward = 0
+                reward = -1
         else:
             reward = -200
 

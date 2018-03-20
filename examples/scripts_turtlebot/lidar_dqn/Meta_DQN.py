@@ -109,8 +109,8 @@ memory = SequentialMemory(limit=1000000, window_length=WINDOW_LENGTH)
 # the agent initially explores the environment (high eps) and then gradually sticks to what it knows
 # (low eps). We also set a dedicated eps value that is used during testing. Note that we set it to 0.05
 # so that the agent still performs some random actions. This ensures that the agent cannot get stuck.
-policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, value_min=.1, value_test=.00,
-                              nb_steps=100000)
+policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.5, value_min=.1, value_test=.00,
+                              nb_steps=10000)
 
 # The trade-off between exploration and exploitation is difficult and an on-going research topic.
 # If you want, you can experiment with the parameters or use a different policy. Another popular one
@@ -121,7 +121,7 @@ policy = LinearAnnealedPolicy(EpsGreedyQPolicy(), attr='eps', value_max=.2, valu
 dqn = DQNAgent(model=model, nb_actions=nb_actions, policy=policy, memory=memory,
                 nb_steps_warmup=5000, gamma=.99, target_model_update=1000,
                enable_dueling_network=True, dueling_type='avg', train_interval=4, delta_clip=1.)
-dqn.compile(Adam(lr=.00025), metrics=['mae'])
+dqn.compile(Adam(lr=.0025), metrics=['mae'])
 
 log_parent_dir = './train_log'
 

@@ -61,12 +61,12 @@ K.set_session(sess)
 INPUT_SHAPE = (84, 84)
 WINDOW_LENGTH = 4
 
-save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboBoxSnakeMonsterCameraNnEnv-v0/2017-12-05_18-29-23'
+save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_snake_monster/camera_dqn/train_log/GazeboBoxSnakeMonsterCameraNnEnv-v0'
 # save_dir = '/home/hadis/Hadi/RL/gym-gazebo-hadi/examples/scripts_turtlebot/camera_dqn/train_log/GazeboCircuit2cTurtlebotCameraNnEnv-v0/best_weights/'
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
-parser.add_argument('--env-name', type=str, default='GazeboBoxSnakeMonsterCameraNnEnv-v0')
+parser.add_argument('--env_name', type=str, default='GazeboBoxSnakeMonsterCameraNnEnv-v0')
 parser.add_argument('--weights', type=str, default=save_dir+'/100000.h5f')
 parser.add_argument('--continue_training', action='store_true', 
         help='Flag whether to load check point and continue training')

@@ -30,19 +30,19 @@ repositories:
   ecl_core:
     type: git
     url: https://github.com/stonier/ecl_core
-    version: indigo-devel
+    version: release/0.61-indigo-kinetic
   ecl_lite:
     type: git
     url: https://github.com/stonier/ecl_lite
-    version: indigo-stable
+    version: release/0.61-indigo-kinetic
   ecl_navigation:
     type: git
     url: https://github.com/stonier/ecl_navigation
-    version: indigo-stable
+    version: devel
   ecl_tools:
     type: git
     url: https://github.com/stonier/ecl_tools
-    version: indigo-stable
+    version: release/0.61-indigo-kinetic
   gazebo_ros_pkgs:
     type: git
     url: https://github.com/ros-simulation/gazebo_ros_pkgs

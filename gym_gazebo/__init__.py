@@ -59,6 +59,12 @@ register(
     # More arguments here
 )
 
+## RI corridor Deep Learning project
+register(
+    id='GazeboCorridorTurtlebotCameraNnEnv-v0',
+    entry_point='gym_gazebo.envs:GazeboCorridorTurtlebotCameraNnEnv',
+    # More arguments here
+)
 
 # Erle-Copter envs
 register(

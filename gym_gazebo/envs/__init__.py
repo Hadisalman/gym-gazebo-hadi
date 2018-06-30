@@ -14,6 +14,9 @@ from gym_gazebo.envs.gazebo_path2_turtlebot_camera_nn import GazeboPath2Turtlebo
 from gym_gazebo.envs.gazebo_envi_turtlebot_camera_nn import GazeboEnviTurtlebotCameraNnEnv
 from gym_gazebo.envs.METAENV_gazebo_envi_turtlebot_camera_nn import MetaGazeboEnviTurtlebotCameraNnEnv
 
+# RI corridor Deep Learning project
+from gym_gazebo.envs.gazebo_corridor_turtlebot_camera_nn import GazeboCorridorTurtlebotCameraNnEnv
+
 #SnakeMonster
 from gym_gazebo.envs.gazebo_circuit2_snakemonster_lidar import GazeboCircuit2SnakeMonsterLidarEnv
 from gym_gazebo.envs.gazebo_snake_lidar import GazeboSnakeLidarEnv

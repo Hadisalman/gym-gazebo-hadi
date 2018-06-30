@@ -1,0 +1,309 @@
+import cv2
+import gym
+import rospy
+import roslaunch
+import time
+import numpy as np
+import sys
+import os
+import random
+
+import roslib; roslib.load_manifest('gazebo_ros')
+
+from gazebo_msgs.msg import ModelState
+from std_msgs.msg import Int32
+from gym import utils, spaces
+from gym_gazebo.envs import gazebo_env
+from geometry_msgs.msg import Twist
+from std_srvs.srv import Empty
+from sensor_msgs.msg import Image
+from sensor_msgs.msg import LaserScan
+from gym.utils import seeding
+from cv_bridge import CvBridge, CvBridgeError
+
+import skimage as skimage
+from skimage import transform, color, exposure
+from skimage.transform import rotate
+from skimage.viewer import ImageViewer
+
+from tf.transformations import quaternion_from_euler
+import getModelStates
+from IPython import embed
+
+
+class GazeboCorridorTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
+
+	def __init__(self):
+		# Launch the simulation with the given launchfile name
+		gazebo_env.GazeboEnv.__init__(self, "GazeboCorridorTurtlebotCamera_v0.launch")
+		self.vel_pub = rospy.Publisher('/mobile_base/commands/velocity', Twist, queue_size=5)
+
+	#(Uncomment the below line and comment above line to give inputs to turtlebot)
+	#self.vel_pub = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=5)
+
+		self.unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
+		self.pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
+		self.reset_proxy = rospy.ServiceProxy('/gazebo/reset_simulation', Empty)
+		self.state_pub = rospy.Publisher('gazebo/set_model_state', ModelState, queue_size=1)
+
+		self.reward_range = (-np.inf, np.inf)
+		self.episode = 0
+		self._seed()
+
+		self.last50actions = [0] * 50
+
+		self.img_rows = 84
+		self.img_cols = 84
+		self.img_channels = 1
+		#self.initial_angles = [0, 0]
+		self.initial_angles = [np.pi/2,np.pi/2]
+
+	def setmodelstate(self, modelname='mobile_base',x=2,y=-3,yaw=0):
+		# rospy.init_node('ali')    
+		state=ModelState()
+		state.model_name = modelname
+		state.pose.position.x=x
+		state.pose.position.y=y
+		# state.pose.position.z=0.1
+		q = quaternion_from_euler(0, 0, yaw)
+		state.pose.orientation.x=q[0]
+		state.pose.orientation.y=q[1]
+		state.pose.orientation.z=q[2]
+		state.pose.orientation.w=q[3]
+		self.state_pub.publish(state)
+
+	def calculate_observation(self,data):
+		min_range = 0.2
+		done = False
+	#data1 = data.ranges[5:15]
+		for i, item in enumerate(data.ranges):
+			if (min_range > data.ranges[i] > 0):
+				done = True
+		return done
+
+	def _seed(self, seed=None):
+		self.np_random, seed = seeding.np_random(seed)
+		return [seed]
+
+	def _step(self, action):
+		print(action)
+		rospy.wait_for_service('/gazebo/unpause_physics')
+		try:
+			self.unpause()
+		except rospy.ServiceException as e:
+			print ("/gazebo/unpause_physics service call failed")
+
+		'''# 21 actions
+		max_ang_speed = 0.3
+		ang_vel = (action-10)*max_ang_speed*0.1 #from (-0.33 to + 0.33)
+
+		vel_cmd = Twist()
+		vel_cmd.linear.x = 0.2
+		vel_cmd.angular.z = ang_vel
+		self.vel_pub.publish(vel_cmd)'''
+
+		# 3 actions
+		if action == 0: #FORWARD
+			vel_cmd = Twist()
+			vel_cmd.linear.x = 0.2
+			vel_cmd.angular.z = 0.0
+			self.vel_pub.publish(vel_cmd)
+		elif action == 1: #LEFT
+			vel_cmd = Twist()
+			vel_cmd.linear.x = 0.05
+			vel_cmd.angular.z = 0.2
+			self.vel_pub.publish(vel_cmd)
+		elif action == 2: #RIGHT
+			vel_cmd = Twist()
+			vel_cmd.linear.x = 0.05
+			vel_cmd.angular.z = -0.2
+			self.vel_pub.publish(vel_cmd)
+
+		data = None
+		while data is None:
+			try:
+				data = rospy.wait_for_message('/scan', LaserScan, timeout=5)
+			except:
+				pass
+
+		rospy.wait_for_service('/gazebo/pause_physics')
+		try:
+			#resp_pause = pause.call()
+			self.pause()
+		except rospy.ServiceException as e:
+			print ("/gazebo/pause_physics service call failed")
+
+		done = self.calculate_observation(data)
+		# print("check1")
+		# embed()
+		current_state = getModelStates.gms_client('mobile_base','world')
+		# if (current_state.pose.position.y > 7.0):
+		if (current_state.pose.position.y > 7.0 and current_state.pose.position.x<-1):
+			done = True
+
+#        if (current_state.pose.position.y > 11.0 and current_state.pose.position.x<-11):
+			# done = True
+
+		image_data = None
+		success=False
+		cv_image = None
+		while image_data is None or success is False:
+			try:
+				image_data = rospy.wait_for_message('/camera/rgb/image_raw', Image, timeout=5)
+				h = image_data.height
+				w = image_data.width
+				cv_image = CvBridge().imgmsg_to_cv2(image_data, "bgr8")
+				#temporal fix, check image is not corrupted
+				if not (cv_image[h/2,w/2,0]==178 and cv_image[h/2,w/2,1]==178 and cv_image[h/2,w/2,2]==178):
+					success = True
+				else:
+					pass
+					#print("/camera/rgb/image_raw ERROR, retrying")
+			except:
+				pass
+
+		rospy.wait_for_service('/gazebo/pause_physics')
+		try:
+			#resp_pause = pause.call()
+			self.pause()
+		except rospy.ServiceException as e:
+			print ("/gazebo/pause_physics service call failed")
+
+
+		self.last50actions.pop(0) #remove oldest
+		if action == 0:
+			self.last50actions.append(0)
+		else:
+			self.last50actions.append(1)
+
+		action_sum = sum(self.last50actions)
+
+
+		'''# 21 actions
+		if not done:
+			# Straight reward = 5, Max angle reward = 0.5
+			reward = round(15*(max_ang_speed - abs(ang_vel) +0.0335), 2)
+			# print ("Action : "+str(action)+" Ang_vel : "+str(ang_vel)+" reward="+str(reward))
+		
+			if action_sum > 45: #L or R looping
+				#print("90 percent of the last 50 actions were turns. LOOPING")
+				reward = -5
+		else:
+			reward = -200'''
+
+
+		# Add center of the track reward
+		# len(data.ranges) = 100
+		laser_len = len(data.ranges)
+		left_sum = sum(data.ranges[laser_len-(laser_len/5):laser_len-(laser_len/10)]) #80-90
+		right_sum = sum(data.ranges[(laser_len/10):(laser_len/5)]) #10-20
+
+		center_detour = abs(right_sum - left_sum)/5
+
+		# 3 actions
+		# if not done:
+		#     if action == 0:
+		#         reward = 10 / float(center_detour+1)
+		#     elif action_sum > 45: #L or R looping
+		#         reward = -0.5
+		#     else: #L or R no looping
+		#         reward = 5 / float(center_detour+1)
+		# else:
+		#     # reward = -1
+		#     reward = -50
+
+		if not done:
+			if action == 0:
+				reward = 5
+			else:
+				reward = 1
+		else:
+			reward = -200
+
+		#print("detour= "+str(center_detour)+" :: reward= "+str(reward)+" ::action="+str(action))
+
+		'''x_t = skimage.color.rgb2gray(cv_image)
+		x_t = skimage.transform.resize(x_t,(32,32))
+		x_t = skimage.exposure.rescale_intensity(x_t,out_range=(0,255))'''
+		
+		cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+		cv_image = cv2.resize(cv_image, (self.img_rows, self.img_cols))
+		#cv_image = cv_image[(self.img_rows/20):self.img_rows-(self.img_rows/20),(self.img_cols/10):self.img_cols] #crop image
+		#cv_image = skimage.exposure.rescale_intensity(cv_image,out_range=(0,255))
+
+		# print("check 2")
+		# embed()
+		state = cv_image.reshape(cv_image.shape[0], cv_image.shape[1])
+		return state, reward, done, {}
+
+		# test STACK 4
+		#cv_image = cv_image.reshape(1, 1, cv_image.shape[0], cv_image.shape[1])
+		#self.s_t = np.append(cv_image, self.s_t[:, :3, :, :], axis=1)
+		#return self.s_t, reward, done, {} # observation, reward, done, info
+
+	def _reset(self):
+		self.episode +=1 
+		self.last50actions = [0] * 50 #used for looping avoidance
+		# Resets the state of the environment and returns an initial observation.
+		rospy.wait_for_service('/gazebo/reset_simulation')
+		try:
+			#reset_proxy.call()
+			self.reset_proxy()
+			# self.setmodelstate(x=4,y=7,yaw=self.initial_angles[self.episode%2])
+			self.setmodelstate(x=0,y=0,yaw=self.initial_angles[self.episode%2])
+			# time.sleep(2)
+			# self.setmodelstate(x=1,y=12,yaw=3.14)
+
+		except rospy.ServiceException as e:
+			print ("/gazebo/reset_simulation service call failed")
+
+		# Unpause simulation to make observation
+		rospy.wait_for_service('/gazebo/unpause_physics')
+		try:
+			#resp_pause = pause.call()
+			self.unpause()
+		except rospy.ServiceException as e:
+			print ("/gazebo/unpause_physics service call failed")
+
+		image_data = None
+		success=False
+		cv_image = None
+		while image_data is None or success is False:
+			try:
+				image_data = rospy.wait_for_message('/camera/rgb/image_raw', Image, timeout=5)
+				h = image_data.height
+				w = image_data.width
+				cv_image = CvBridge().imgmsg_to_cv2(image_data, "bgr8")
+				#temporal fix, check image is not corrupted
+				if not (cv_image[h/2,w/2,0]==178 and cv_image[h/2,w/2,1]==178 and cv_image[h/2,w/2,2]==178):
+					success = True
+				else:
+					pass
+					#print("/camera/rgb/image_raw ERROR, retrying")
+			except:
+				pass
+
+		rospy.wait_for_service('/gazebo/pause_physics')
+		try:
+			#resp_pause = pause.call()
+			self.pause()
+		except rospy.ServiceException as e:
+			print ("/gazebo/pause_physics service call failed")
+
+		'''x_t = skimage.color.rgb2gray(cv_image)
+		x_t = skimage.transform.resize(x_t,(32,32))
+		x_t = skimage.exposure.rescale_intensity(x_t,out_range=(0,255))'''
+
+
+		cv_image = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+		cv_image = cv2.resize(cv_image, (self.img_rows, self.img_cols))
+		#cv_image = cv_image[(self.img_rows/20):self.img_rows-(self.img_rows/20),(self.img_cols/10):self.img_cols] #crop image
+		#cv_image = skimage.exposure.rescale_intensity(cv_image,out_range=(0,255))
+
+		state = cv_image.reshape(cv_image.shape[0], cv_image.shape[1])
+		return state
+
+		# test STACK 4
+		#self.s_t = np.stack((cv_image, cv_image, cv_image, cv_image), axis=0)
+		#self.s_t = self.s_t.reshape(1, self.s_t.shape[0], self.s_t.shape[1], self.s_t.shape[2])
+		#return self.s_t

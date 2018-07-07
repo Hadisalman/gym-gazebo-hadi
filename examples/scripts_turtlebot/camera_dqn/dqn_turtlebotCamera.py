@@ -67,7 +67,7 @@ save_dir = currentPath + '/weights_to_use_DL/'
 # 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', type=str, default='train')
-parser.add_argument('--env-name', type=str, default='GazeboEnviTurtlebotCameraNnEnv-v0')
+parser.add_argument('--env-name', type=str, default='GazeboCorridorTurtlebotCameraNnEnv-v0')
 parser.add_argument('--continue-training', action='store_true', 
 		help='Flag whether to load check point and continue training')
 parser.add_argument('--weights', type=str, default=save_dir+'path1.h5f', 

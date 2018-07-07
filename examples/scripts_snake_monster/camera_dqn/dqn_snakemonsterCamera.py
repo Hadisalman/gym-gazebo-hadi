@@ -68,7 +68,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--mode', choices=['train', 'test'], default='train')
 parser.add_argument('--env_name', type=str, default='GazeboBoxSnakeMonsterCameraNnEnv-v0')
 parser.add_argument('--weights', type=str, default=save_dir+'/100000.h5f')
-parser.add_argument('--continue_training', action='store_true', 
+parser.add_argument('--continue_training', action='store_false', 
         help='Flag whether to load check point and continue training')
 args = parser.parse_args()
 

@@ -12,6 +12,7 @@ import roslib; roslib.load_manifest('gazebo_ros')
 
 from gazebo_msgs.msg import ModelState
 from std_msgs.msg import Int32
+from nav_msgs.msg import Odometry
 from gym import utils, spaces
 from gym_gazebo.envs import gazebo_env
 from geometry_msgs.msg import Twist
@@ -56,9 +57,9 @@ class GazeboCorridorTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
 		self.img_cols = 84
 		self.img_channels = 1
 		#self.initial_angles = [0, 0]
-		self.initial_angles = [np.pi/2,np.pi/2]
+		self.initial_angles = [np.pi,np.pi]
 
-	def setmodelstate(self, modelname='mobile_base',x=2,y=-3,yaw=0):
+	def setmodelstate(self, modelname='mobile_base',x=4,y=-3,yaw=0):
 		# rospy.init_node('ali')    
 		state=ModelState()
 		state.model_name = modelname
@@ -72,12 +73,12 @@ class GazeboCorridorTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
 		state.pose.orientation.w=q[3]
 		self.state_pub.publish(state)
 
-	def calculate_observation(self,data):
-		min_range = 0.2
+	def calculate_observation(self, data):
+		min_range = 0.21
 		done = False
-	#data1 = data.ranges[5:15]
-		for i, item in enumerate(data.ranges):
-			if (min_range > data.ranges[i] > 0):
+		data1 = data.ranges[1:15]
+		for i, item in enumerate(data1):
+			if (min_range > data1[i] > 0):
 				done = True
 		return done
 
@@ -138,7 +139,7 @@ class GazeboCorridorTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
 		# embed()
 		current_state = getModelStates.gms_client('mobile_base','world')
 		# if (current_state.pose.position.y > 7.0):
-		if (current_state.pose.position.y > 7.0 and current_state.pose.position.x<-1):
+		if (current_state.pose.position.y > 6.0 or current_state.pose.position.x < -6.0):
 			done = True
 
 #        if (current_state.pose.position.y > 11.0 and current_state.pose.position.x<-11):
@@ -250,7 +251,7 @@ class GazeboCorridorTurtlebotCameraNnEnv(gazebo_env.GazeboEnv):
 			#reset_proxy.call()
 			self.reset_proxy()
 			# self.setmodelstate(x=4,y=7,yaw=self.initial_angles[self.episode%2])
-			self.setmodelstate(x=0,y=0,yaw=self.initial_angles[self.episode%2])
+			self.setmodelstate(x=4,y=-3,yaw=self.initial_angles[self.episode%2])
 			# time.sleep(2)
 			# self.setmodelstate(x=1,y=12,yaw=3.14)
 
